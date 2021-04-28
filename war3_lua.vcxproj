@@ -74,11 +74,13 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)Build\bin\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)Build\obj\$(Configuration)\$(Platform)\</IntDir>
+    <TargetExt>.mix</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)Build\bin\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)Build\obj\$(Configuration)\$(Platform)\</IntDir>
+    <TargetExt>.mix</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -92,10 +94,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutiondDir)3rd\StormLib\Include;$(SolutiondDir)3rd\lua\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutiondDir)3rd\StormLib\Build\bin\Release\Win32;$(SolutiondDir)3rd\lua\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -106,12 +110,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutiondDir)3rd\StormLib\Include;$(SolutiondDir)3rd\lua\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutiondDir)3rd\StormLib\Build\bin\Release\Win32;$(SolutiondDir)3rd\lua\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -143,6 +149,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Hooks.cpp" />
+    <ClCompile Include="Src\Jass.cpp" />
+    <ClCompile Include="Src\LuaRegister.cpp" />
+    <ClCompile Include="Src\Main.cpp" />
+    <ClCompile Include="Src\Variables.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Src\Hooks.h" />
+    <ClInclude Include="Src\Jass.h" />
+    <ClInclude Include="Src\Lua.h" />
+    <ClInclude Include="Src\LuaRegister.h" />
+    <ClInclude Include="Src\Mem.h" />
+    <ClInclude Include="Src\Variables.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="war3_lua.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

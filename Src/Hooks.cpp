@@ -3,7 +3,7 @@
 #include "Lua.h"
 #include "Mem.h"
 
-BOOL __fastcall DoTrigger(DWORD a1, DWORD index, DWORD a3, DWORD result, DWORD a5, DWORD a6, DWORD a7)
+BOOL __fastcall TriggerRuntime(DWORD a1, DWORD index, DWORD a3, DWORD result, DWORD a5, DWORD a6, DWORD a7)
 {
 	DWORD trigger;
 	DWORD table_offset;
@@ -16,8 +16,8 @@ BOOL __fastcall DoTrigger(DWORD a1, DWORD index, DWORD a3, DWORD result, DWORD a
 	lua_trigger = (PLUA_TRIGGER)index;
 	table = *(DWORD*)(*(DWORD*)(table_offset + 0x2888) + 8);
 
-	for (const auto& _trigger : g_LuaTriggers)
-		if (lua_trigger == _trigger)
+	for (const auto& _lua_trigger : g_LuaTriggers)
+		if (lua_trigger == _lua_trigger)
 		{
 			DWORD retval = 0;
 			lua_pushvalue(lua_trigger->lua, -1);
@@ -54,14 +54,6 @@ DWORD _fastcall Main(DWORD a1)
 	DWORD result = reinterpret_cast<DWORD(_fastcall*)(DWORD)>(MakePtr(hGame, _MainProc))(a1);
 
 	RunLua();
-
-	
-	HANDLE hMpq = *(HANDLE*)MakePtr(hGame, 0xaae788);
-	char buffer[MAX_PATH];
-
-	reinterpret_cast<BOOL(CALLBACK*)(HANDLE, LPSTR, int)>(GetProcAddress(0, (LPCSTR)275))(hMpq, buffer, MAX_PATH);
-	
-	printf("Map name: %s\n", buffer);
 
 	return result;
 }

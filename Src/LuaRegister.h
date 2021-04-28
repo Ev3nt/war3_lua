@@ -22,3 +22,4 @@ LUA lua_Condition(lua_State* l);
 LUA lua_TriggerAddCondition(lua_State* l);
 LUA lua_CreateTrigger(lua_State* l);
 LUA lua_TriggerAddAction(lua_State* l);
+LUA lua_GetPlayerName(lua_State* l);

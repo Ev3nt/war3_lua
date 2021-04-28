@@ -15,6 +15,7 @@ void lua_opencfunctions(lua_State* l)
 	lua_register(l, "TriggerAddAction", lua_TriggerAddAction);
 	lua_register(l, "Condition", lua_Condition);
 	lua_register(l, "TriggerAddCondition", lua_TriggerAddCondition);
+	lua_register(l, "GetPlayerName", lua_GetPlayerName);
 }
 
 //------------------------C Functions
@@ -138,6 +139,13 @@ LUA lua_TriggerAddAction(lua_State* l)
 	g_LuaTriggers.push_back(trigger);
 
 	lua_pushinteger(l, TriggerAddAction((jTrigger)lua_tointeger(l, 1), (jCode)trigger));
+
+	return 1;
+}
+
+LUA lua_GetPlayerName(lua_State* l)
+{
+	lua_pushstring(l, GetPlayerName((jInteger)lua_tointeger(l, 1)));
 
 	return 1;
 }

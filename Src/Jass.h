@@ -125,3 +125,6 @@ jTrigger CreateTrigger();
 HBOOLEXPR Condition(jCode actionFunc);
 HTRIGGERCONDITION TriggerAddCondition(jTrigger whichTrigger, HBOOLEXPR condition);
 HTRIGGERACTION TriggerAddAction(jTrigger whichTrigger, jCode actionFunc);
+//jString GetPlayerName(HPLAYER whichPlayer);
+// Rewrited
+LPCSTR GetPlayerName(HPLAYER whichPlayer);

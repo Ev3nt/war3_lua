@@ -61,7 +61,7 @@ HPLAYER __declspec(naked) Player(jInteger number)
 	}
 }
 
-jNothing __declspec(naked) DisplayTimedTextToPlayer(HPLAYER toPlayer, jReal* x, jReal* y, jReal* duration, jString msg)
+jNothing __declspec(naked) DisplayTimedTextToPlayer(HPLAYER toPlayer, jReal* x, jReal* y, jReal* duration, jString message)
 {
 	_asm
 	{
@@ -146,5 +146,37 @@ HPLAYEREVENT __declspec(naked) ConvertPlayerEvent(jInteger i)
 		mov eax, hGame
 		add eax, 0x3b26b0
 		jmp eax
+	}
+}
+
+/*jString __declspec(naked) GetPlayerName(HPLAYER whichPlayer)
+{
+	_asm
+	{
+		mov eax, hGame
+		add eax, 0x3c0f60
+		jmp eax
+	}
+}*/
+
+// Rewrited
+LPCSTR __declspec(naked) GetPlayerName(HPLAYER whichPlayer)
+{
+	_asm
+	{
+		mov ecx, [esp + 4]
+		mov eax, hGame
+		add eax, 0x3bd4d0
+		call eax
+		test eax, eax
+		jne pSuccessful
+		ret
+	pSuccessful :
+		push 1
+		mov ecx, eax
+		mov eax, hGame
+		add eax, 0x40aff0
+		call eax
+		ret
 	}
 }
