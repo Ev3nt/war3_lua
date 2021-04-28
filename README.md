@@ -3,7 +3,7 @@
 War3 Lua is a modification that allows you to run lua scripts at the JASS level. Lua does not replace the original scripting system in the game, but only expands its capabilities.
 
 
-![](war_lua.png)
+![](https://github.com/Ev3nt/war3_lua/blob/master/war3_lua.png)
 
 ---
 ### Installation requirements
