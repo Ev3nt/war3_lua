@@ -35,8 +35,9 @@ LUA lua_TimerStart(lua_State* l)
 	trigger->parent = l;
 	trigger->lua = lua_newthread(trigger->parent);
 	trigger->type = TYPES::LUA_TRIGGER_CODE;
+	lua_pop(trigger->parent, 1);
 	lua_pushvalue(trigger->parent, 4);
-	lua_xmove(trigger->parent, trigger->lua, 2);
+	lua_xmove(trigger->parent, trigger->lua, 1);
 
 	g_LuaTriggers.push_back(trigger);
 
