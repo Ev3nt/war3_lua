@@ -6,6 +6,11 @@ jReal to_jReal(float fX)
 	return *(jReal*)&fX;
 }
 
+float from_jReal(jReal val)
+{
+	return *(float*)&val;
+}
+
 jString to_jString(LPCSTR lpString)
 {
 	UINT32* string = new UINT32[8];

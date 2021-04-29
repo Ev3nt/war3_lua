@@ -107,6 +107,7 @@ typedef DWORD HAGENT;
 typedef DWORD HTERRAINDEFORMATION;
 
 jReal to_jReal(float fX);
+float from_jReal(jReal val);
 jString to_jString(LPCSTR lpString);
 LPCSTR from_jString(jString string);
 jInteger to_ID(LPCSTR lpID);
