@@ -32,7 +32,7 @@ static LUA traceback(lua_State* L)
 	return 1;
 }
 
-void RunLua()
+VOID CALLBACK RunLua()
 {
 	if (g_Lua)
 	{
@@ -88,11 +88,11 @@ void RunLua()
 
 void ClearScreen()
 {
-	HANDLE                     hStdOut;
+	HANDLE hStdOut;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	DWORD                      count;
-	DWORD                      cellCount;
-	COORD                      homeCoords = { 0, 0 };
+	DWORD count;
+	DWORD cellCount;
+	COORD homeCoords = { 0, 0 };
 
 	hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (hStdOut == INVALID_HANDLE_VALUE)

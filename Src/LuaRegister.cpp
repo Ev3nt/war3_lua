@@ -2914,14 +2914,14 @@ LUA lua_GetCreatureDensity(lua_State* l)
 
 LUA lua_GetStartLocationX(lua_State* l)
 {
-	lua_pushinteger(l, GetStartLocationX((jInteger)lua_tointeger(l, 1)));
+	lua_pushnumber(l, from_jReal(GetStartLocationX((jInteger)lua_tointeger(l, 1))));
 
 	return 1;
 }
 
 LUA lua_GetStartLocationY(lua_State* l)
 {
-	lua_pushinteger(l, GetStartLocationY((jInteger)lua_tointeger(l, 1)));
+	lua_pushnumber(l, from_jReal(GetStartLocationY((jInteger)lua_tointeger(l, 1))));
 
 	return 1;
 }
@@ -3116,21 +3116,21 @@ LUA lua_MoveLocation(lua_State* l)
 
 LUA lua_GetLocationX(lua_State* l)
 {
-	lua_pushinteger(l, GetLocationX((HLOCATION)lua_tointeger(l, 1)));
+	lua_pushnumber(l, from_jReal(GetLocationX((HLOCATION)lua_tointeger(l, 1))));
 
 	return 1;
 }
 
 LUA lua_GetLocationY(lua_State* l)
 {
-	lua_pushinteger(l, GetLocationY((HLOCATION)lua_tointeger(l, 1)));
+	lua_pushnumber(l, from_jReal(GetLocationY((HLOCATION)lua_tointeger(l, 1))));
 
 	return 1;
 }
 
 LUA lua_GetLocationZ(lua_State* l)
 {
-	lua_pushinteger(l, GetLocationZ((HLOCATION)lua_tointeger(l, 1)));
+	lua_pushnumber(l, from_jReal(GetLocationZ((HLOCATION)lua_tointeger(l, 1))));
 
 	return 1;
 }
@@ -3170,21 +3170,21 @@ LUA lua_TimerStart(lua_State* l)
 
 LUA lua_TimerGetTimeout(lua_State* l)
 {
-	lua_pushinteger(l, TimerGetTimeout((HTIMER)lua_tointeger(l, 1)));
+	lua_pushnumber(l, from_jReal(TimerGetTimeout((HTIMER)lua_tointeger(l, 1))));
 
 	return 1;
 }
 
 LUA lua_TimerGetElapsed(lua_State* l)
 {
-	lua_pushinteger(l, TimerGetElapsed((HTIMER)lua_tointeger(l, 1)));
+	lua_pushnumber(l, from_jReal(TimerGetElapsed((HTIMER)lua_tointeger(l, 1))));
 
 	return 1;
 }
 
 LUA lua_TimerGetRemaining(lua_State* l)
 {
-	lua_pushinteger(l, TimerGetRemaining((HTIMER)lua_tointeger(l, 1)));
+	lua_pushnumber(l, from_jReal(TimerGetRemaining((HTIMER)lua_tointeger(l, 1))));
 
 	return 1;
 }
@@ -5085,7 +5085,7 @@ LUA lua_CreateUnitAtLoc(lua_State* l)
 {
 	jReal a4 = to_jReal((float)lua_tonumber(l, 4));
 
-	lua_pushinteger(l, CreateUnitAtLoc((HPLAYER)lua_tointeger(l, 1), (jInteger)lua_tointeger(l, 2), (HLOCATION)lua_tointeger(l, 3), &a4));
+	lua_pushinteger(l, CreateUnitAtLoc((HPLAYER)lua_tointeger(l, 1), to_ID(lua_tostring(l, 2)), (HLOCATION)lua_tointeger(l, 3), &a4));
 
 	return 1;
 }
