@@ -4198,7 +4198,7 @@ LUA lua_TriggerRegisterPlayerChatEvent(lua_State* l)
 
 LUA lua_GetEventPlayerChatString(lua_State* l)
 {
-	lua_pushstring(l, from_jString(GetEventPlayerChatString()));
+	lua_pushstring(l, GetEventPlayerChatString());
 
 	return 1;
 }

@@ -901,7 +901,10 @@ HEVENT  TriggerRegisterPlayerAllianceChange(jTrigger, HPLAYER, HALLIANCETYPE);
 
 HEVENT  TriggerRegisterPlayerChatEvent(jTrigger, HPLAYER, jString, jBoolean);
 
-jString GetEventPlayerChatString();
+//jString GetEventPlayerChatString();
+
+// Rewrited
+LPCSTR GetEventPlayerChatString();
 
 jString GetEventPlayerChatStringMatched();
 

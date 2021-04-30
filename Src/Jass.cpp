@@ -3978,13 +3978,46 @@ HEVENT  __declspec(naked) TriggerRegisterPlayerChatEvent(jTrigger, HPLAYER, jStr
 	}
 }
 
-jString __declspec(naked) GetEventPlayerChatString()
+/*jString __declspec(naked) GetEventPlayerChatString()
 {
 	_asm
 	{
 		mov eax, hGame
 		add eax, 0x3c20b0
 		jmp eax
+	}
+}*/
+
+// Rewrited
+LPCSTR __declspec(naked) GetEventPlayerChatString()
+{
+	_asm
+	{
+		mov eax, hGame
+		add eax, 0x3bb2c0
+		call eax
+		add eax, 0x80200
+		cmp eax, 0x80260
+		je pSuccessful1
+	pSuccessful2:
+		xor eax, eax
+		ret
+	pSuccessful1:
+		mov eax, hGame
+		add eax, 0x3c1d40
+		call eax
+		test eax, eax
+		je pSuccessful2
+		mov eax, hGame
+		add eax, 0x3c1d60
+		call eax
+		test eax, eax
+		je pSuccessful2
+		lea ecx, [eax + 0x2c]
+		mov eax, hGame
+		add eax, 0x4c4630
+		call eax
+		ret
 	}
 }
 
