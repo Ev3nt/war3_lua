@@ -25,13 +25,24 @@ BOOL __fastcall TriggerRuntime(DWORD a1, DWORD index, DWORD a3, DWORD result, DW
 			switch (lua_trigger->type)
 			{
 			case LUA_TRIGGER_CODE:
-				retval = !lua_pcall(lua_trigger->lua, 0, 0, 0);
+				if (!(retval = !lua_pcall(lua_trigger->lua, 0, 0, 0)))
+				{
+					printf("\n");
+					printf("%s\n", lua_tostring(lua_trigger->lua, -1));
+					lua_pop(lua_trigger->lua, 1);
+				}
 
 				break;
 			case LUA_CONDITION_CODE:
 
-				retval = !lua_pcall(lua_trigger->lua, 0, 1, 0);;
-				*(DWORD*)result = lua_toboolean(lua_trigger->lua, -1);
+				if (!(retval = !lua_pcall(lua_trigger->lua, 0, 1, 0)))
+				{
+					printf("\n");
+					printf("%s\n", lua_tostring(lua_trigger->lua, -1));
+				}
+				else
+					*(DWORD*)result = lua_toboolean(lua_trigger->lua, -1);
+
 				lua_pop(lua_trigger->lua, 1);
 
 				break;

@@ -9,6 +9,29 @@
 
 void ClearScreen();
 
+static LUA traceback(lua_State* L)
+{
+	lua_getglobal(L, "debug");
+	if (!lua_istable(L, -1))
+	{
+		lua_pop(L, 1);
+		return 0;
+	}
+
+	lua_getfield(L, -1, "traceback");
+	if (!lua_isfunction(L, -1))
+	{
+		lua_pop(L, 2);
+		return 0;
+	}
+
+	lua_pushvalue(L, 1);
+	lua_pushinteger(L, 2);
+	lua_call(L, 2, 1);
+
+	return 1;
+}
+
 void RunLua()
 {
 	if (g_Lua)
@@ -40,17 +63,23 @@ void RunLua()
 			ZeroMemory(buffer, lenght);
 
 			SFileReadFile(hFile, buffer, lenght, NULL, NULL);
+			SFileCloseFile(hFile);
+			//lua_pushcfunction(g_Lua, traceback);
 			if (luaL_loadstring(g_Lua, buffer))
+			{
 				printf("[LUA] Couldn't load war3map.lua.\n");
+				printf("%s\n", lua_tostring(g_Lua, -1));
+			}
 			else
-				if (lua_pcall(g_Lua, 0, LUA_MULTRET, 0))
+				if (lua_pcall(g_Lua, 0, 0, 0))
+				{
 					printf("[LUA] Syntax error.\n");
+					printf("%s\n", lua_tostring(g_Lua, -1));
+				}
 				else
 					printf("[LUA] Successfully!\n");
 
 			delete[] buffer;
-
-			SFileCloseFile(hFile);
 		}
 		else
 			printf("[LUA] war3map.lua doesn't exist.\n");

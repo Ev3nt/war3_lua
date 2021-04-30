@@ -6901,7 +6901,7 @@ LUA lua_GetPlayerId(lua_State* l)
 
 LUA lua_SetPlayerTechMaxAllowed(lua_State* l)
 {
-	SetPlayerTechMaxAllowed((HPLAYER)lua_tointeger(l, 1), (jInteger)lua_tointeger(l, 2), (jInteger)lua_tointeger(l, 3));
+	SetPlayerTechMaxAllowed((HPLAYER)lua_tointeger(l, 1), to_ID(lua_tostring(l, 2)), (jInteger)lua_tointeger(l, 3));
 
 	return 0;
 }
@@ -6929,7 +6929,7 @@ LUA lua_SetPlayerTechResearched(lua_State* l)
 
 LUA lua_GetPlayerTechResearched(lua_State* l)
 {
-	lua_pushboolean(l, GetPlayerTechResearched((HPLAYER)lua_tointeger(l, 1), (jInteger)lua_tointeger(l, 2), lua_toboolean(l, 3)));
+	lua_pushboolean(l, GetPlayerTechResearched((HPLAYER)lua_tointeger(l, 1), to_ID(lua_tostring(l, 2)), lua_toboolean(l, 3)));
 
 	return 1;
 }
