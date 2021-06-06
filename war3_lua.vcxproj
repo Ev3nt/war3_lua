@@ -150,18 +150,22 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Src\Hooks.cpp" />
-    <ClCompile Include="Src\Jass.cpp" />
+    <ClCompile Include="Src\JassMachine.cpp" />
+    <ClCompile Include="Src\JassNatives.cpp" />
+    <ClCompile Include="Src\LuaMachine.cpp" />
     <ClCompile Include="Src\LuaRegister.cpp" />
     <ClCompile Include="Src\Main.cpp" />
-    <ClCompile Include="Src\Variables.cpp" />
+    <ClCompile Include="Src\Warcraft.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Hooks.h" />
-    <ClInclude Include="Src\Jass.h" />
-    <ClInclude Include="Src\Lua.h" />
+    <ClInclude Include="Src\JassMachine.h" />
+    <ClInclude Include="Src\JassNatives.h" />
+    <ClInclude Include="Src\LuaMachine.h" />
     <ClInclude Include="Src\LuaRegister.h" />
     <ClInclude Include="Src\Mem.h" />
     <ClInclude Include="Src\Variables.h" />
+    <ClInclude Include="Src\Warcraft.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
