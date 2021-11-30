@@ -1,7 +1,10 @@
 #include "LuaRegister.h"
 
+#include "Variables.h"
 #include "Warcraft.h"
 #include "JassNatives.h"
+
+#define lua_registerJassNative(L, n, f) (lua_pushstring(L, (n)), lua_pushcclosure(L, (f), 1), lua_setglobal(L, (n)))
 
 LUA lua_jCall(lua_State* l)
 {
@@ -10,8 +13,6 @@ LUA lua_jCall(lua_State* l)
 
 	if (!native.is_valid())
 	{
-		printf("[LUA] Warning: Jass function with name %s doesn't exist.\n", name);
-
 		return 0;
 	}
 
@@ -96,31 +97,11 @@ LUA lua_jCall(lua_State* l)
 	return native.get_rettype() != TYPE_NOTHING ? 1 : 0;
 }
 
-LUA lua_get(lua_State* l)
-{
-	lua_pushstring(l, lua_tostring(l, 2));
-	lua_pushcclosure(l, lua_jCall, 1);
-
-	return 1;
-}
-
-LUA lua_opennatives(lua_State* l)
-{
-	lua_newtable(l);
-	lua_newtable(l);
-
-	lua_pushstring(l, "__index");
-	lua_pushcclosure(l, lua_get, 0);
-	lua_rawset(l, -3);
-
-	lua_setmetatable(l, -2);
-
-	return 1;
-}
-
 //-------------------------------------------------------------
 
 void lua_open_jassnatives(lua_State* l)
 {
-	lua_preload(l, "jass.natives", lua_opennatives);
+	for (const auto& native : jassnatives) {
+		lua_registerJassNative(l, native.first, lua_jCall);
+	}
 }

@@ -3,7 +3,7 @@
 #include <Windows.h>
 
 #include <lua.hpp>
-#pragma comment(lib, "lua-5.4.3.lib")
+#pragma comment(lib, "lua.lib")
 
 typedef int LUA;
 
