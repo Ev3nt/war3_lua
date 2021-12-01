@@ -1,4 +1,4 @@
-# War3 Lua - 1.1.1
+# War3 Lua - 1.1.2 (Beta)
 
 [![build](https://github.com/Ev3nt/war3_lua/actions/workflows/build.yml/badge.svg)](https://github.com/Ev3nt/war3_lua/actions/workflows/build.yml)
 

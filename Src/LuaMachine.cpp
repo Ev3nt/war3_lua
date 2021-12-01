@@ -1,5 +1,6 @@
 #include "LuaMachine.h"
 
+#include <fstream>
 #include <Storm.h>
 #pragma comment(lib, "storm.lib")
 
@@ -18,6 +19,60 @@ void lua_preload(lua_State* l, LPCSTR name, lua_CFunction function)
 	lua_pop(l, 1);
 }
 
+//-----------------------------------------------------------------------------
+
+static int checkload(lua_State* L, int stat, const char* filename) {
+	if (stat) {
+		lua_pushstring(L, filename);
+		return 2;
+	}
+	else
+		return luaL_error(L, "error loading module '%s' from file '%s':\n\t%s",
+			lua_tostring(L, 1), filename, lua_tostring(L, -1));
+}
+
+static int searcher_LuaInMpq(lua_State* l) {
+	HANDLE map = *(HANDLE*)MakePtr(hGame, _MapMPQ);
+
+	std::string filename = luaL_checkstring(l, 1) + std::string(".lua");
+	lua_pop(l, 1);
+
+	HANDLE file;
+	if (SFileOpenFileEx(map, filename.c_str(), NULL, &file)) {
+		int lenght = SFileGetFileSize(file, NULL);
+		char* buffer = new char[lenght + 1];
+	
+		ZeroMemory(buffer, lenght + 1);
+
+		SFileReadFile(file, buffer, lenght, NULL, NULL);
+		SFileCloseFile(file);
+
+		int result = checkload(l, (luaL_loadstring(l, buffer) == LUA_OK), filename.c_str());
+		delete[] buffer;
+	
+		return result;
+	}
+
+	char mapname[MAX_PATH] = { 0 };
+	SFileGetArchiveName(map, mapname, sizeof(mapname));
+	std::string mapnamestring = mapname;
+
+	for (size_t i = mapnamestring.size(); i > 0; i--) {
+		if (mapnamestring[i] == '\\') {
+			mapnamestring = mapnamestring.substr(i + 1);
+
+			break;
+		}
+	}
+	
+
+	lua_pushstring(l, std::string("no file '(" + mapnamestring + "):\\" + filename + "'").c_str());
+
+	return 1;
+}
+
+//-----------------------------------------------------------------------------
+
 lua_State* GetMainLuaState()
 {
 	if (!MainLuaState)
@@ -26,6 +81,48 @@ lua_State* GetMainLuaState()
 
 		luaL_openlibs(l);
 		lua_open_jassnatives(l);
+		
+		std::vector<lua_CFunction> searchers;
+
+		lua_getglobal(l, "package");
+		lua_getfield(l, -1, "searchers");
+
+		lua_rawgeti(l, -1, 1);
+		searchers.push_back(lua_tocfunction(l, -1));
+		lua_pop(l, 1);
+		
+		// for (int i = 1; ; i++) {
+		// 	if (lua_rawgeti(l, -1, i) == LUA_TNIL) {
+		// 		lua_pop(l, 1);
+		// 
+		// 		break;
+		// 	}
+		// 
+		// 	searchers.push_back(lua_tocfunction(l, -1));
+		// 	lua_pop(l, 1);
+		// }
+		// 
+		// searchers.pop_back();
+		// searchers.pop_back();
+		// 
+		//searchers.insert(searchers.begin() + 1, searcher_LuaInMpq);
+
+		searchers.push_back(searcher_LuaInMpq);
+
+		for (size_t i = 0; i < searchers.size(); i++) {
+			lua_pushvalue(l, -2);
+			lua_pushcclosure(l, searchers[i], 1);
+			lua_rawseti(l, -2, i + 1);
+		}
+
+		lua_pushnil(l);
+		lua_rawseti(l, -2, 3);
+
+		lua_pushnil(l);
+		lua_rawseti(l, -2, 4);
+
+		lua_pop(l, 2);
+		std::vector<lua_CFunction>().swap(searchers);
 	}
 
 	return MainLuaState;
@@ -158,7 +255,7 @@ void StartLua()
 		HANDLE hFile;
 		if (SFileOpenFileEx(hMapMPQ, "war3map.lua", NULL, &hFile))
 		{
-			int lenght = 65535;
+			int lenght = SFileGetFileSize(hFile, NULL);
 			char* buffer = new char[lenght];
 
 			ZeroMemory(buffer, lenght);
