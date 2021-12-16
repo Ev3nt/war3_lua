@@ -36,6 +36,9 @@
     <ClCompile Include="Src\LuaMachine.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Src\WarcraftFunctions.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Hooks.h">
@@ -62,9 +65,17 @@
     <ClInclude Include="Src\LuaMachine.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Src\fcalls.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\WarcraftFunctions.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+    <None Include="Scripts\common.lua" />
+    <None Include="Scripts\blizzard.lua" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="war3_lua.png">

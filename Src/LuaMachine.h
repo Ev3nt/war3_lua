@@ -7,20 +7,18 @@
 
 typedef int LUA;
 
-void lua_preload(lua_State* l, LPCSTR name, lua_CFunction function);
+lua_State* getMainLuaState();
 
-lua_State* GetMainLuaState();
+void destroyMainLuaState();
 
-void DestroyMainLuaState();
+lua_State* getMainThread(lua_State* thread);
 
-lua_State* GetMainThread(lua_State* thread);
+BOOL getGlobalTable(lua_State* l, LPCSTR name, bool weak);
 
-void GetGlobalTable(lua_State* l, LPCSTR name, bool weak);
+int pushFunctionRef(lua_State* l, int index);
 
-int PushFunctionRef(lua_State* l, int index);
+void getFunctionByRef(lua_State* l, int ref);
 
-void GetFunctionByRef(lua_State* l, int ref);
+DWORD startLua();
 
-void StartLua();
-
-BOOL CALLBACK StartLuaThread(DWORD esi, DWORD edi);
+BOOL CALLBACK startLuaThread(DWORD esi, DWORD edi);

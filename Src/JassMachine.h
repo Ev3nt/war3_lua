@@ -5,8 +5,7 @@
 
 #include "Warcraft.h"
 
-enum OPCODES
-{
+enum OPCODES {
 	OPTYPE_MINLIMIT = 0x00,
 	OPTYPE_ENDPROGRAM = 0x01,
 	OPTYPE_OLDJUMP = 0x02,
@@ -55,8 +54,7 @@ enum OPCODES
 	OPTYPE_STARTLUATHREAD = 0x2D
 };
 
-enum OPCODE_VARIABLE_TYPE
-{
+enum OPCODE_VARIABLE_TYPE {
 	OPCODE_VARIABLE_NOTHING = 0,
 	OPCODE_VARIABLE_UNKNOWN,
 	OPCODE_VARIABLE_NULL,
@@ -73,6 +71,8 @@ enum OPCODE_VARIABLE_TYPE
 	OPCODE_VARIABLE_BOOLEAN_ARRAY
 };
 
+#ifndef _JassMachine_h
+#define _JassMachine_h
 typedef struct {
 	DWORD unk;
 	DWORD zero1;
@@ -85,8 +85,7 @@ typedef struct {
 	DWORD value;
 	DWORD zero6;
 
-	void set(DWORD value, OPCODE_VARIABLE_TYPE type)
-	{
+	void set(DWORD value, OPCODE_VARIABLE_TYPE type) {
 		this->value = value;
 		type1 = type;
 		type2 = type;
@@ -102,23 +101,19 @@ private:
 	PJASS_DATA_SLOT stack[32];
 	size_t size;
 public:
-	PJASS_DATA_SLOT pop()
-	{
+	PJASS_DATA_SLOT pop() {
 		return stack[--size];
 	}
 
-	PJASS_DATA_SLOT& operator[](size_t index)
-	{
+	PJASS_DATA_SLOT& operator[](size_t index) {
 		return stack[index];
 	}
 
-	void clear(size_t number)
-	{
+	void clear(size_t number) {
 		size = number < size ? size - number : 0;
 	}
 
-	size_t Size()
-	{
+	size_t Size() {
 		return size;
 	}
 } JASS_STACK, * PJASS_STACK;
@@ -127,8 +122,7 @@ typedef struct {
 private:
 	std::vector<JASS_OPCODE> oplist;
 public:
-	void addop(BYTE opcode, BYTE reg = 0, DWORD value = NULL, BYTE type = OPCODE_VARIABLE_NOTHING, BYTE rettype = OPCODE_VARIABLE_NOTHING)
-	{
+	void addop(BYTE opcode, BYTE reg = 0, DWORD value = NULL, BYTE type = OPCODE_VARIABLE_NOTHING, BYTE rettype = OPCODE_VARIABLE_NOTHING) {
 		JASS_OPCODE* _opcode = new JASS_OPCODE;
 		_opcode->rettype = rettype;
 		_opcode->type = type;
@@ -139,13 +133,13 @@ public:
 		oplist.push_back(*_opcode);
 	}
 
-	DWORD getcode()
-	{
-		return ((DWORD)&oplist - GetJassMachine()->code_table->table) / 4;
+	DWORD getcode() {
+		return ((DWORD)&oplist - getJassMachine()->code_table->table) / 4;
 	}
 
 } JASS_OPLIST, * PJASS_OPLIST;
+#endif
 
 //---------------------------------------------------------
 
-void JassOpcodeInitialize();
+void jassOpcodeInitialize();

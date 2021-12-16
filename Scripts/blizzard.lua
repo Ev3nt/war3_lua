@@ -10210,4 +10210,45 @@ function WidgetDropItem(inWidget, inItemID)
 	return CreateItem(inItemID, x, y)
 end
 
+-- ***************************************************************************
+-- 
+-- *  Wrapped functions
+-- 
+-- *  Just wrap for functions
+-- 
+-- ***************************************************************************
+
+function GetEffectPos(effect)
+	return GetObjectPos(effect)
+end
+
+function GetEffectX(effect)
+	return GetObjectX(effect)
+end
+
+function GetEffectY(effect)
+	return GetObjectY(effect)
+end
+
+function GetEffectZ(effect)
+	return GetObjectZ(effect)
+end
+
+function SetEffectPos(effect, x, y, z)
+	SetObjectPos(effect, x, y, z)
+end
+
+function SetEffectX(effect, x)
+	SetObjectX(effect, x)
+end
+
+function SetEffectY(effect, y)
+	SetObjectY(effect, y)
+end
+function SetEffectZ(effect, z)
+	SetObjectZ(effect, z)
+end
+
+-- ===========================================================================
+
 InitBlizzard()

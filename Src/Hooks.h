@@ -2,4 +2,4 @@
 
 #include <Windows.h>
 
-DWORD __fastcall JassEntryPoint(DWORD a);
+DWORD __fastcall jassEntryPoint(DWORD a);

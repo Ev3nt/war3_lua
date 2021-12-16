@@ -9,133 +9,260 @@
 #include "Warcraft.h"
 #include "Mem.h"
 
-lua_State* MainLuaState = NULL;
+lua_State* mainLuaState = NULL;
 
-void lua_preload(lua_State* l, LPCSTR name, lua_CFunction function)
-{
-	lua_getfield(l, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
-	lua_pushcclosure(l, function, 0);
-	lua_setfield(l, -2, name);
+
+//---------------------------------------------------------------------------------
+// Utils
+
+BOOL isInGameCatalog(LPCSTR fileName) {
+	char filepath[MAX_PATH] = { 0 };
+	GetFullPathName(fileName, sizeof(filepath), filepath, NULL);
+
+	char path[MAX_PATH] = { 0 };
+	GetModuleFileName(GetModuleHandle(NULL), path, sizeof(path));
+	for (int i = strlen(path); path[i] != '\\'; path[i] = NULL, i--);
+
+	return !_strnicmp(filepath, path, strlen(path)) ? TRUE : FALSE;
+}
+
+BOOL isAllowedExtension(LPCSTR fileName) {
+	char* fileextension = (char*)fileName + strlen(fileName);
+
+	for (; fileextension[0] != '.'; fileextension--);
+	fileextension++;
+
+	std::vector<LPCSTR> extensions = { "exe", "dll", "asi", "mix", "m3d", "mpq", "w3x", "w3m", "w3n" };
+	for (const auto& extension : extensions) {
+		if (!_strnicmp(fileextension, extension, strlen(extension))) {
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+//---------------------------------------------------------------------------------
+// File stream only in catalog
+
+// Open
+luaL_Stream* newprefile(lua_State* L) {
+	luaL_Stream* p = (luaL_Stream*)lua_newuserdatauv(L, sizeof(luaL_Stream), 0);
+	p->closef = NULL;
+	luaL_setmetatable(L, LUA_FILEHANDLE);
+	return p;
+}
+
+int io_fclose(lua_State* L) {
+	luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
+	int res = fclose(p->f);
+	return luaL_fileresult(L, (res == 0), NULL);
+}
+
+luaL_Stream* newfile(lua_State* L) {
+	luaL_Stream* p = newprefile(L);
+	p->f = NULL;
+	p->closef = &io_fclose;
+	return p;
+}
+
+int l_checkmode(const char* mode) {
+	return (*mode != '\0' && strchr("rwa", *(mode++)) != NULL && (*mode != '+' || ((void)(++mode), 1)) && (strspn(mode, "b") == strlen(mode)));
+}
+
+int io_open(lua_State* L) {
+	const char* filename = luaL_checkstring(L, 1);
+	const char* mode = luaL_optstring(L, 2, "r");
+
+	if (!isInGameCatalog(filename) || !isAllowedExtension(filename)) {
+		return luaL_fileresult(L, FALSE, filename);
+	}
+
+	luaL_Stream* p = newfile(L);
+	const char* md = mode;
+	luaL_argcheck(L, l_checkmode(md), 2, "invalid mode");
+	fopen_s(&(p->f), filename, mode);
+	return (p->f == NULL) ? luaL_fileresult(L, 0, filename) : 1;
+}
+
+// Remove
+int os_remove(lua_State* L) {
+	const char* filename = luaL_checkstring(L, 1);
+
+	if (!isInGameCatalog(filename) || !isAllowedExtension(filename)) {
+		return luaL_fileresult(L, FALSE, filename);
+	}
+
+	return luaL_fileresult(L, remove(filename) == 0, filename);
+}
+
+// Rename
+int os_rename(lua_State* L) {
+	const char* fromname = luaL_checkstring(L, 1);
+	const char* toname = luaL_checkstring(L, 2);
+
+	if (!isInGameCatalog(fromname) || !isAllowedExtension(fromname) || !isInGameCatalog(toname) || !isAllowedExtension(toname)) {
+		return luaL_fileresult(L, FALSE, NULL);
+	}
+
+	return luaL_fileresult(L, rename(fromname, toname) == 0, NULL);
+}
+
+void lua_replaceFileStreamFunctions(lua_State* l) {
+	lua_getglobal(l, "io");
+	lua_pushcfunction(l, io_open);
+	lua_setfield(l, -2, "open");
+
+	lua_pop(l, 1);
+
+	lua_getglobal(l, "os");
+	lua_pushcfunction(l, os_remove);
+	lua_setfield(l, -2, "remove");
+
+	lua_pushcfunction(l, os_rename);
+	lua_setfield(l, -2, "rename");
+
 	lua_pop(l, 1);
 }
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------
+// Disabled functions
 
-static int checkload(lua_State* L, int stat, const char* filename) {
+void disable_functions(lua_State* l) {
+	lua_getglobal(l, "os");
+
+	std::vector<LPCSTR> functions = { "execute", "getenv", "setlocale", "tmpname" };
+
+	for (const auto& function : functions) {
+		lua_pushnil(l);
+		lua_setfield(l, -2, function);
+	}
+
+	lua_pop(l, 1);
+
+	lua_getglobal(l, "io");
+
+	functions = { "stdin", "stdout", "stderr", "flush", "input", "lines", "output", "popen", "tmpfile", "type" };
+
+	for (const auto& function : functions) {
+		lua_pushnil(l);
+		lua_setfield(l, -2, function);
+	}
+
+	lua_pop(l, 1);
+
+	lua_pushnil(l);
+	lua_setglobal(l, "dofile");
+
+}
+
+//---------------------------------------------------------------------------------
+// Loader lua from mpq
+
+
+// Lua
+int checkload(lua_State* L, int stat, const char* filename) {
 	if (stat) {
 		lua_pushstring(L, filename);
 		return 2;
 	}
-	else
-		return luaL_error(L, "error loading module '%s' from file '%s':\n\t%s",
-			lua_tostring(L, 1), filename, lua_tostring(L, -1));
+	else {
+		return luaL_error(L, "error loading module '%s' from file '%s':\n\t%s", lua_tostring(L, 1), filename, lua_tostring(L, -1));
+	}
 }
 
-static int searcher_LuaInMpq(lua_State* l) {
-	HANDLE map = *(HANDLE*)MakePtr(hGame, _MapMPQ);
+int searcher_Lua(lua_State* l) {
+	HANDLE map = *(HANDLE*)MakePtr(gameBase, _mapMPQ);
 
-	std::string filename = luaL_checkstring(l, 1) + std::string(".lua");
+	std::string scriptName = luaL_checkstring(l, 1) + std::string(".lua");
 	lua_pop(l, 1);
 
-	HANDLE file;
-	if (SFileOpenFileEx(map, filename.c_str(), NULL, &file)) {
-		int lenght = SFileGetFileSize(file, NULL);
+	char mapName[MAX_PATH] = { 0 };
+	SFileGetArchiveName(map, mapName, sizeof(mapName));
+	std::string scriptPath = mapName;
+
+	for (size_t i = scriptPath.size(); i > 0; i--) {
+		if (scriptPath[i] == '\\') {
+			scriptPath = scriptPath.substr(i + 1);
+
+			break;
+		}
+	}
+
+	scriptPath = "(" + scriptPath + "):\\" + scriptName;
+
+	HANDLE script;
+	if (SFileOpenFileEx(map, scriptName.c_str(), NULL, &script)) {
+		int lenght = SFileGetFileSize(script, NULL);
 		char* buffer = new char[lenght + 1];
 	
 		ZeroMemory(buffer, lenght + 1);
 
-		SFileReadFile(file, buffer, lenght, NULL, NULL);
-		SFileCloseFile(file);
+		SFileReadFile(script, buffer, lenght, NULL, NULL);
+		SFileCloseFile(script);
 
-		int result = checkload(l, (luaL_loadstring(l, buffer) == LUA_OK), filename.c_str());
+		int result = checkload(l, (luaL_loadbuffer(l, buffer, strlen(buffer), ("@"  + scriptPath).c_str()) == LUA_OK), scriptName.c_str());
 		delete[] buffer;
 	
 		return result;
 	}
 
-	char mapname[MAX_PATH] = { 0 };
-	SFileGetArchiveName(map, mapname, sizeof(mapname));
-	std::string mapnamestring = mapname;
-
-	for (size_t i = mapnamestring.size(); i > 0; i--) {
-		if (mapnamestring[i] == '\\') {
-			mapnamestring = mapnamestring.substr(i + 1);
-
-			break;
-		}
-	}
-	
-
-	lua_pushstring(l, std::string("no file '(" + mapnamestring + "):\\" + filename + "'").c_str());
+	lua_pushstring(l, std::string("no file '" + scriptPath + "'").c_str());
 
 	return 1;
 }
 
-//-----------------------------------------------------------------------------
+void lua_replaceSearchers(lua_State* l) {
+	std::vector<lua_CFunction> searchers;
 
-lua_State* GetMainLuaState()
-{
-	if (!MainLuaState)
-	{
-		lua_State* l = MainLuaState = luaL_newstate();
+	lua_getglobal(l, "package");
+	lua_getfield(l, -1, "searchers");
 
-		luaL_openlibs(l);
-		lua_open_jassnatives(l);
-		
-		std::vector<lua_CFunction> searchers;
+	lua_rawgeti(l, -1, 1);
+	searchers.push_back(lua_tocfunction(l, -1));
+	lua_pop(l, 2);
 
-		lua_getglobal(l, "package");
-		lua_getfield(l, -1, "searchers");
+	searchers.push_back(searcher_Lua);
 
-		lua_rawgeti(l, -1, 1);
-		searchers.push_back(lua_tocfunction(l, -1));
-		lua_pop(l, 1);
-		
-		// for (int i = 1; ; i++) {
-		// 	if (lua_rawgeti(l, -1, i) == LUA_TNIL) {
-		// 		lua_pop(l, 1);
-		// 
-		// 		break;
-		// 	}
-		// 
-		// 	searchers.push_back(lua_tocfunction(l, -1));
-		// 	lua_pop(l, 1);
-		// }
-		// 
-		// searchers.pop_back();
-		// searchers.pop_back();
-		// 
-		//searchers.insert(searchers.begin() + 1, searcher_LuaInMpq);
+	lua_newtable(l);
 
-		searchers.push_back(searcher_LuaInMpq);
-
-		for (size_t i = 0; i < searchers.size(); i++) {
-			lua_pushvalue(l, -2);
-			lua_pushcclosure(l, searchers[i], 1);
-			lua_rawseti(l, -2, i + 1);
-		}
-
-		lua_pushnil(l);
-		lua_rawseti(l, -2, 3);
-
-		lua_pushnil(l);
-		lua_rawseti(l, -2, 4);
-
-		lua_pop(l, 2);
-		std::vector<lua_CFunction>().swap(searchers);
+	for (size_t i = 0; i < searchers.size(); i++) {
+		lua_pushvalue(l, -2);
+		lua_pushcclosure(l, searchers[i], 1);
+		lua_rawseti(l, -2, i + 1);
 	}
 
-	return MainLuaState;
+	lua_setfield(l, -2, "searchers");
+
+	lua_pop(l, 1);
+	searchers.clear();
 }
 
-lua_State* CreateThread(lua_State* l, int index)
-{
+//---------------------------------------------------------------------------------
+
+lua_State* getMainLuaState() {
+	if (!mainLuaState) {
+		lua_State* l = mainLuaState = luaL_newstate();
+
+		luaL_openlibs(l);
+		disable_functions(l);
+		lua_open_jassnatives(l);
+		lua_open_warcraftfunctions(l);
+		lua_replaceSearchers(l);
+		lua_replaceFileStreamFunctions(l);
+
+		// get_native("TriggerSleepAction").set_sleep(true);
+	}
+
+	return mainLuaState;
+}
+
+lua_State* createThread(lua_State* l, int index) {
 	lua_pushvalue(l, index);
-	GetGlobalTable(l, "_LUA_THREADS", false);
+	getGlobalTable(l, "_LUA_THREADS", false);
 	lua_pushvalue(l, -2);
 
-	if (lua_rawget(l, -2) != LUA_TTHREAD)
-	{
+	if (lua_rawget(l, -2) != LUA_TTHREAD) {
 		lua_pop(l, 1);
 		lua_newthread(l);
 		lua_pushvalue(l, -3);
@@ -149,8 +276,7 @@ lua_State* CreateThread(lua_State* l, int index)
 	return thread;
 }
 
-void ClearScreen()
-{
+void clearScreen() {
 	HANDLE hStdOut;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	DWORD count;
@@ -158,37 +284,40 @@ void ClearScreen()
 	COORD homeCoords = { 0, 0 };
 
 	hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (hStdOut == INVALID_HANDLE_VALUE)
-		return;
 
-	if (!GetConsoleScreenBufferInfo(hStdOut, &csbi))
+	if (hStdOut == INVALID_HANDLE_VALUE) {
 		return;
+	}
+
+	if (!GetConsoleScreenBufferInfo(hStdOut, &csbi)) {
+		return;
+	}
 
 	cellCount = csbi.dwSize.X * csbi.dwSize.Y;
 
-	if (!FillConsoleOutputCharacter(hStdOut, ' ', cellCount, homeCoords, &count))
+	if (!FillConsoleOutputCharacter(hStdOut, ' ', cellCount, homeCoords, &count)) {
 		return;
+	}
 
-	if (!FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
+	if (!FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count)) {
 		return;
+	}
 
 	SetConsoleCursorPosition(hStdOut, homeCoords);
 }
 
-void DestroyMainLuaState()
+void destroyMainLuaState()
 {
-	if (MainLuaState)
-	{
-		lua_close(MainLuaState);
-		MainLuaState = NULL;
+	if (mainLuaState) {
+		lua_close(mainLuaState);
+		mainLuaState = NULL;
 		triggers.clear();
 	}
 
-	ClearScreen();
+	clearScreen();
 }
 
-lua_State* GetMainThread(lua_State* thread)
-{
+lua_State* getMainThread(lua_State* thread) {
 	lua_rawgeti(thread, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
 	lua_State* l = lua_tothread(thread, -1);
 	lua_pop(thread, 1);
@@ -196,17 +325,14 @@ lua_State* GetMainThread(lua_State* thread)
 	return l;
 }
 
-void GetGlobalTable(lua_State* l, LPCSTR name, bool weak)
-{
+BOOL getGlobalTable(lua_State* l, LPCSTR name, bool weak) {
 	lua_getfield(l, LUA_REGISTRYINDEX, name);
 
-	if (!lua_istable(l, -1))
-	{
+	if (!lua_istable(l, -1)) {
 		lua_pop(l, 1);
 		lua_newtable(l);
 
-		if (weak)
-		{
+		if (weak) {
 			lua_newtable(l);
 			lua_pushstring(l, "__mode");
 			lua_pushstring(l, "kv");
@@ -217,13 +343,16 @@ void GetGlobalTable(lua_State* l, LPCSTR name, bool weak)
 
 		lua_pushvalue(l, -1);
 		lua_setfield(l, LUA_REGISTRYINDEX, name);
+
+		return FALSE;
 	}
+
+	return TRUE;
 }
 
-int PushFunctionRef(lua_State* l, int index)
-{
+int pushFunctionRef(lua_State* l, int index) {
 	lua_pushvalue(l, index);
-	GetGlobalTable(l, "_LUA_FUNCTIONS_REF", false);
+	getGlobalTable(l, "_LUA_FUNCTIONS_REF", false);
 
 	int ref = (int)lua_rawlen(l, -1);
 	lua_pushvalue(l, -2);
@@ -234,68 +363,63 @@ int PushFunctionRef(lua_State* l, int index)
 	return ref;
 }
 
-void GetFunctionByRef(lua_State* l, int ref)
-{
-	GetGlobalTable(l, "_LUA_FUNCTIONS_REF", false);
+void getFunctionByRef(lua_State* l, int ref) {
+	getGlobalTable(l, "_LUA_FUNCTIONS_REF", false);
 	lua_rawgeti(l, -1, ref);
 	lua_remove(l, -2);
 }
 
-void StartLua()
-{
-	DestroyMainLuaState();
-
-	lua_State* l = GetMainLuaState();
-
-	//luaL_dofile(l, ".\\Scripts\\main.lua");
-
-	HANDLE hMapMPQ = *(HANDLE*)MakePtr(hGame, _MapMPQ);
-	if (hMapMPQ)
-	{
-		HANDLE hFile;
-		if (SFileOpenFileEx(hMapMPQ, "war3map.lua", NULL, &hFile))
-		{
-			int lenght = SFileGetFileSize(hFile, NULL);
-			char* buffer = new char[lenght];
-
-			ZeroMemory(buffer, lenght);
-
-			SFileReadFile(hFile, buffer, lenght, NULL, NULL);
-			SFileCloseFile(hFile);
-			//lua_pushcfunction(g_Lua, traceback);
-			if (luaL_loadstring(l, buffer))
-				printf("[LUA] Failed to load war3map.lua.\n");
-			else
-				if (lua_pcall(l, 0, 0, 0))
-				{
-					printf("[LUA] Lua error.\n");
-					printf("%s\n", lua_tostring(l, -1));
-				}
-				else
-					printf("[LUA] Successfully!\n");
-
-			delete[] buffer;
-		}
-	}
+void lua_throwerr(lua_State* l) {
+	printf("--------------------Lua Error--------------------\n%s\n-------------------------------------------------\n\n", lua_tostring(l, -1));
 }
 
-BOOL CALLBACK StartLuaThread(DWORD esi, DWORD edi)
-{
+DWORD startLua() {
+	destroyMainLuaState();
+
+	lua_State* l = getMainLuaState();
+
+	HANDLE war3luaScript;
+	
+	if (SFileOpenFileEx(*(HANDLE*)MakePtr(gameBase, _mapMPQ), "war3map.lua", NULL, &war3luaScript)) {
+		SFileCloseFile(war3luaScript);
+
+		lua_getglobal(l, "require");
+		lua_pushstring(l, "war3map");
+		if (lua_pcall(l, 1, LUA_MULTRET, 0) != LUA_OK) {
+			lua_throwerr(l);
+		}
+		lua_pop(l, 1);
+	}
+
+	return 0;
+}
+
+BOOL __stdcall startLuaThread(DWORD esi, DWORD edi) {
 	PJASS_STACK stack = (PJASS_STACK) * (DWORD*)(esi + 0x2868);
 
 	lua_State* l = (lua_State*)stack->pop()->value;
-	GetFunctionByRef(l, stack->pop()->value);
-	lua_State* thread = CreateThread(l, -1);
+	getFunctionByRef(l, stack->pop()->value);
+	lua_State* thread = createThread(l, -1);
 	lua_xmove(l, thread, 1);
 
 	int res;
-	int error = lua_resume(thread, l, 0, &res);
-	if (error == LUA_OK)
+	switch (lua_resume(thread, l, 0, &res)) {
+	case LUA_OK:
 		((PJASS_DATA_SLOT)(esi + 80))->set(lua_toboolean(thread, 1), OPCODE_VARIABLE_BOOLEAN);
-	else if (error == LUA_ERRRUN)
-	{
-		printf("[LUA] Lua error.\n");
-		printf("%s\n", lua_tostring(l, -1));
+
+		break;
+	// case LUA_YIELD:
+	// 	if (res == lua_gettop(l)) {
+	// 		//printf("%s = %d\n", lua_tostring(l, -1), lua_gettop(l));
+	// 	}
+	// 
+	// 	printf("%d = %d\n", res, lua_gettop(l));
+	// 
+	// 	break;
+	case LUA_ERRRUN:
+		lua_throwerr(thread);
+
+		break;
 	}
 
 	return TRUE;

@@ -109,8 +109,7 @@ typedef DWORD HEVENT;
 typedef DWORD HAGENT;
 typedef DWORD HTERRAINDEFORMATION;
 
-enum JASS_TYPE
-{
+enum JASS_TYPE {
 	TYPE_NONE = 0,
 	TYPE_BOOLEAN = 'B',
 	TYPE_CODE = 'C',
@@ -121,18 +120,15 @@ enum JASS_TYPE
 	TYPE_NOTHING = 'V',
 };
 
-inline jReal to_jReal(float fX)
-{
+inline jReal to_jReal(float fX) {
 	return *(jReal*)&fX;
 }
 
-inline float from_jReal(jReal val)
-{
+inline float from_jReal(jReal val) {
 	return *(float*)&val;
 }
 
-inline jString to_jString(LPCSTR lpString)
-{
+inline jString to_jString(LPCSTR lpString) {
 	UINT32* string = new UINT32[8];
 
 	string[2] = (UINT32)&string[0];
@@ -141,34 +137,38 @@ inline jString to_jString(LPCSTR lpString)
 	return (jString)string;
 }
 
-inline LPCSTR from_jString(jString string)
-{
-	if (!string)
+inline LPCSTR from_jString(jString string) {
+	if (!string) {
 		return NULL;
+	}
 
 	string = ((jString*)string)[2];
 
-	if (!string)
+	if (!string) {
 		return NULL;
+	}
 
 	return (LPCSTR)((jString*)string)[7];
 }
 
 DWORD to_Code(lua_State* l, int index);
 
-inline jInteger to_ID(LPCSTR lpID)
-{
+inline jInteger to_ID(LPCSTR lpID) {
 	return (lpID[0] << 24) + (lpID[1] << 16) + (lpID[2] << 8) + lpID[3];
 }
 
 //---------------------------------------------------------
 
+#ifndef _JassNatives_h
+#define _JassNatives_h
 class JASSNATIVE {
 public:
 	JASSNATIVE(DWORD address, LPCSTR params);
 	JASSNATIVE();
 
 	bool is_valid();
+	bool is_sleep();
+	void set_sleep(bool sleep);
 	const std::vector<JASS_TYPE>& get_params();
 	const JASS_TYPE& get_rettype();
 	DWORD get_address();
@@ -180,9 +180,10 @@ private:
 	JASS_TYPE _rettype;
 	bool has_sleep = false;
 };
+#endif
 
 //---------------------------------------------------------
 
-JASSNATIVE get_native(LPCSTR lpName);
+JASSNATIVE& get_native(LPCSTR lpName);
 
-void JassNativesInitialize();
+void jassNativesInitialize();

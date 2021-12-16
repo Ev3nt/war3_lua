@@ -166,8 +166,10 @@
     <ClCompile Include="Src\LuaRegister.cpp" />
     <ClCompile Include="Src\Main.cpp" />
     <ClCompile Include="Src\Warcraft.cpp" />
+    <ClCompile Include="Src\WarcraftFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Src\fcalls.h" />
     <ClInclude Include="Src\Hooks.h" />
     <ClInclude Include="Src\JassMachine.h" />
     <ClInclude Include="Src\JassNatives.h" />
@@ -176,9 +178,12 @@
     <ClInclude Include="Src\Mem.h" />
     <ClInclude Include="Src\Variables.h" />
     <ClInclude Include="Src\Warcraft.h" />
+    <ClInclude Include="Src\WarcraftFunctions.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+    <None Include="Scripts\blizzard.lua" />
+    <None Include="Scripts\common.lua" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="war3_lua.png" />
