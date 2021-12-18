@@ -10,65 +10,66 @@
 LUA lua_jCall(lua_State* l) {
 	LPCSTR name = lua_tostring(l, lua_upvalueindex(1));
 	JASSNATIVE native = get_native(name);
-
+	
 	if (!native.is_valid()) {
 		return 0;
 	}
 
 	{
 		std::vector<JASS_TYPE> params = native.get_params();
-		if ((int)params.size() > lua_gettop(l)) {
-			return 0;
+		int size = params.size();
+		if (size > lua_gettop(l)) {
+			return luaL_error(l, "function '%s' must have %d %s", name, size, size > 1 ? "arguments" : "argument");
 		}
-
-		// if (native.is_sleep()) {
-		// 	lua_yield(l, NULL);
-		// }
 	}
 
-	std::vector<DWORD> temp_params;
-	std::vector<DWORD> params;
+	int size = lua_gettop(l);
+	float* temp_params = new float[size];
+	DWORD* params = new DWORD[size];
+	ZeroMemory(temp_params, size);
+	ZeroMemory(params, size);
 	UINT i = 1;
 
 	for (const auto& type : native.get_params()) {
 		switch (type) {
 		case TYPE_CODE:
 			if (lua_isinteger(l, i)) {
-				params.push_back((DWORD)lua_tointeger(l, i));
+				params[i - 1] = (DWORD)lua_tointeger(l, i);
 			}
 			else if (lua_isfunction(l, i)) {
-				params.push_back(to_Code(l, i));
+				params[i - 1] = to_Code(l, i);
 			}
 
 			break;
 		case TYPE_BOOLEAN:
-			params.push_back((DWORD)lua_toboolean(l, i));
+			params[i - 1] = (DWORD)lua_toboolean(l, i);
 
 			break;
 		case TYPE_HANDLE:
-			params.push_back((DWORD)lua_tointeger(l, i));
+			params[i - 1] = (DWORD)lua_tointeger(l, i);
 
 			break;
 		case TYPE_INTEGER:
 			if (lua_isinteger(l, i)) {
-				params.push_back((DWORD)lua_tointeger(l, i));
+				params[i - 1] = (DWORD)lua_tointeger(l, i);
 			}
 			else {
-				params.push_back(to_ID(lua_tostring(l, i)));
+				params[i - 1] = to_ID(lua_tostring(l, i));
 			}
 
 			break;
-		case TYPE_REAL:
-			temp_params.push_back(to_jReal((float)lua_tonumber(l, i)));
-			params.push_back((DWORD) & (temp_params[temp_params.size() - 1]));
+		case TYPE_REAL: {
+			temp_params[i - 1] = (float)lua_tonumber(l, i);
+			params[i - 1] = (DWORD)&(temp_params[i - 1]);
 
 			break;
+		}
 		case TYPE_STRING:
-			params.push_back(to_jString(lua_tostring(l, i)));
+			params[i - 1] = to_jString(lua_tostring(l, i));
 
 			break;
 		default:
-			params.push_back(NULL);
+			params[i - 1] = NULL;
 
 			break;
 		}
@@ -76,7 +77,9 @@ LUA lua_jCall(lua_State* l) {
 		i++;
 	}
 
-	DWORD result = native.call(params);
+	DWORD result = native.call(params, size);
+	delete[] temp_params;
+	delete[] params;
 
 	switch (native.get_rettype()) {
 	case TYPE_BOOLEAN:

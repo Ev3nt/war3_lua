@@ -10,6 +10,7 @@
 #include "Mem.h"
 
 lua_State* mainLuaState = NULL;
+bool running = false;
 
 
 //---------------------------------------------------------------------------------
@@ -250,8 +251,6 @@ lua_State* getMainLuaState() {
 		lua_open_warcraftfunctions(l);
 		lua_replaceSearchers(l);
 		lua_replaceFileStreamFunctions(l);
-
-		// get_native("TriggerSleepAction").set_sleep(true);
 	}
 
 	return mainLuaState;
@@ -261,7 +260,7 @@ lua_State* createThread(lua_State* l, int index) {
 	lua_pushvalue(l, index);
 	getGlobalTable(l, "_LUA_THREADS", false);
 	lua_pushvalue(l, -2);
-
+	
 	if (lua_rawget(l, -2) != LUA_TTHREAD) {
 		lua_pop(l, 1);
 		lua_newthread(l);
@@ -311,6 +310,7 @@ void destroyMainLuaState()
 	if (mainLuaState) {
 		lua_close(mainLuaState);
 		mainLuaState = NULL;
+		running = false;
 		triggers.clear();
 	}
 
@@ -370,7 +370,18 @@ void getFunctionByRef(lua_State* l, int ref) {
 }
 
 void lua_throwerr(lua_State* l) {
-	printf("--------------------Lua Error--------------------\n%s\n-------------------------------------------------\n\n", lua_tostring(l, -1));
+	running = false;
+
+	LPCSTR error = lua_tostring(l, -1);
+	printf("--------------------Lua Error--------------------\n%s\n-------------------------------------------------\n\n", error);
+	MessageBox(FindWindow("Warcraft III", NULL), error, "Lua Error", MB_ICONHAND | MB_TOPMOST );
+}
+
+LUA stacktrace(lua_State* L)
+{
+	luaL_traceback(L, L, lua_tostring(L, -1), 0);
+
+	return 1;
 }
 
 DWORD startLua() {
@@ -383,11 +394,15 @@ DWORD startLua() {
 	if (SFileOpenFileEx(*(HANDLE*)MakePtr(gameBase, _mapMPQ), "war3map.lua", NULL, &war3luaScript)) {
 		SFileCloseFile(war3luaScript);
 
+		running = true;
+
+		lua_pushcfunction(l, stacktrace);
 		lua_getglobal(l, "require");
 		lua_pushstring(l, "war3map");
-		if (lua_pcall(l, 1, LUA_MULTRET, 0) != LUA_OK) {
+		if (lua_pcall(l, 1, LUA_MULTRET, -3) != LUA_OK) {
 			lua_throwerr(l);
 		}
+
 		lua_pop(l, 1);
 	}
 
@@ -395,6 +410,10 @@ DWORD startLua() {
 }
 
 BOOL __stdcall startLuaThread(DWORD esi, DWORD edi) {
+	if (!running) {
+		return FALSE;
+	}
+
 	PJASS_STACK stack = (PJASS_STACK) * (DWORD*)(esi + 0x2868);
 
 	lua_State* l = (lua_State*)stack->pop()->value;
@@ -408,14 +427,6 @@ BOOL __stdcall startLuaThread(DWORD esi, DWORD edi) {
 		((PJASS_DATA_SLOT)(esi + 80))->set(lua_toboolean(thread, 1), OPCODE_VARIABLE_BOOLEAN);
 
 		break;
-	// case LUA_YIELD:
-	// 	if (res == lua_gettop(l)) {
-	// 		//printf("%s = %d\n", lua_tostring(l, -1), lua_gettop(l));
-	// 	}
-	// 
-	// 	printf("%d = %d\n", res, lua_gettop(l));
-	// 
-	// 	break;
 	case LUA_ERRRUN:
 		lua_throwerr(thread);
 

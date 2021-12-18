@@ -173,7 +173,7 @@ public:
 	const JASS_TYPE& get_rettype();
 	DWORD get_address();
 
-	DWORD call(const std::vector<DWORD> params);
+	DWORD call(DWORD* params, int size);
 private:
 	DWORD _address;
 	std::vector<JASS_TYPE> _params;

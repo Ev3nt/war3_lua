@@ -113,18 +113,18 @@ DWORD JASSNATIVE::get_address() {
 	return _address;
 }
 
-DWORD JASSNATIVE::call(const std::vector<DWORD> params) {
+DWORD JASSNATIVE::call(DWORD* params, int size) {
 	uintptr_t func_address = _address;
 	DWORD retval;
 	uintptr_t esp_ptr;
-	size_t params_size = params.size() * sizeof DWORD;
+	size_t params_size = size * sizeof DWORD;
 
 	_asm {
 		sub esp, params_size
 		mov esp_ptr, esp
 	}
 
-	memcpy((LPVOID)esp_ptr, (LPVOID)params.data(), params_size);
+	memcpy((LPVOID)esp_ptr, params, params_size);
 
 	_asm {
 		call[func_address]
