@@ -23,8 +23,19 @@ typedef struct {
 } STRING_TABLE, * PSTRING_TABLE;
 
 typedef struct {
-	BYTE unk[8];
-	DWORD table;
+	BYTE unk[4];
+	DWORD counter;
+	DWORD* codes; // max_size = 1024
+
+	DWORD push_code(DWORD address) {
+		codes[counter] = address;
+		
+		return counter++;
+	}
+
+	DWORD Size() {
+		return counter;
+	}
 } CODE_TABLE, * PCODE_TABLE;
 
 typedef struct {
@@ -49,7 +60,18 @@ typedef struct {
 	BYTE unk5[0x1C];
 } JASS_INSTANCE, * PJASS_INSTANCE;
 
-struct CGameUI {
+typedef struct {
+	BYTE unk0[18];
+	char access_key[12];
+	DWORD wacraft_key;
+	char language_ltype[8];
+	BYTE unk1[8];
+	DWORD language_key[8];
+	char language[8];
+
+} NetProviderLTCP, *PNetProviderLTCP;
+
+typedef struct {
 	int VirtualTable;
 	int field0004;
 	int field0008;
@@ -95,7 +117,11 @@ struct CGameUI {
 	int field00A8;
 	int field00AC;
 	int field00B0;
-	UINT Frame;
+} CFrame, * PCFrame;
+#define FRAMELAYOUT(f) ((UINT)f + sizeof(CFrame))
+
+struct CGameUI : CFrame {
+	int VirtualTable;
 	int field00B8;
 	int field00BC;
 	int field00C0;
@@ -1308,12 +1334,88 @@ struct CGameWar3 {
 };
 #endif
 
+enum class EFramePoint : UINT
+{
+	TopLeft = 0,
+	Top = 1,
+	TopRight = 2,
+	Left = 3,
+	Center = 4,
+	Right = 5,
+	BottomLeft = 6,
+	Bottom = 7,
+	BottomRight = 8
+};
+
+enum EOriginFrame : UINT {
+	ORIGIN_FRAME_GAME_UI,
+	ORIGIN_FRAME_WORLD_FRAME,
+	ORIGIN_FRAME_HERO_BAR,
+	ORIGIN_FRAME_HERO_BUTTON,
+	ORIGIN_FRAME_HERO_HP_BAR,
+	ORIGIN_FRAME_HERO_MANA_BAR,
+	ORIGIN_FRAME_HERO_BUTTON_INDICATOR,
+	ORIGIN_FRAME_ITEM_BUTTON,
+	ORIGIN_FRAME_COMMAND_BUTTON,
+	ORIGIN_FRAME_SYSTEM_BUTTON,
+	ORIGIN_FRAME_PORTRAIT,
+	ORIGIN_FRAME_MINIMAP,
+	ORIGIN_FRAME_MINIMAP_BUTTON,
+	ORIGIN_FRAME_TOOLTIP,
+	ORIGIN_FRAME_UBERTOOLTIP,
+	ORIGIN_FRAME_CHAT_MSG,
+	ORIGIN_FRAME_UNIT_MSG,
+	ORIGIN_FRAME_TOP_MSG
+};
+
 PJASS_INSTANCE getJassMachine(DWORD index = 1);
 
 PJASS_INSTANCE getJassInstance();
 
 DWORD getInstance(DWORD index);
 
+UINT GetOriginFrame(EOriginFrame originframe, UINT index);
+
+UINT GetPanelButton(UINT frame, BYTE row, BYTE column);
+
 CGameUI* GetGameUI(UINT unknown0 = NULL, UINT unknown1 = NULL);
 
 CGameWar3* GetGameWar3(UINT unknown0 = NULL);
+
+UINT GetTooltipFrame(UINT unknown0 = NULL);
+
+BOOL LoadTOCFile(LPCSTR filename);
+
+UINT GetFrameByName(LPCSTR framename, UINT id);
+
+UINT CreateFrame(LPCSTR baseframe, UINT parentframe, EFramePoint point, EFramePoint relativepoint, UINT id);
+
+void SetFrameText(UINT frame, LPCSTR text);
+
+void SetFrameTextColor(UINT frame, BYTE red, BYTE green, BYTE blue, BYTE alpha);
+
+float GetFrameTextHeight(UINT frame);
+
+void SetFrameWidth(UINT frame, float width);
+
+void SetFrameHeight(UINT frame, float height);
+
+void SetFrameSize(UINT frame, float width, float height);
+
+void SetFrameScale(UINT frame, float scale);
+
+void SetFrameAbsolutePoint(UINT frame, EFramePoint point, float offsetX, float offsetY);
+
+void SetFramePoint(UINT frame, EFramePoint point, UINT parentframe, EFramePoint relativepoint, float offsetX, float offsetY);
+
+float GetFrameWidth(UINT frame);
+
+float GetFrameHeight(UINT frame);
+
+UINT GetFramePointParent(UINT frame, EFramePoint point);
+
+UINT GetFramePointRelativePoint(UINT frame, EFramePoint point);
+
+float GetFramePointX(UINT frame, EFramePoint point);
+
+float GetFramePointY(UINT frame, EFramePoint point);

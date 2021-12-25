@@ -134,7 +134,10 @@ public:
 	}
 
 	DWORD getcode() {
-		return ((DWORD)&oplist - getJassMachine()->code_table->table) / 4;
+		//return (DWORD)oplist.data();
+		//printf("%08X\n", getJassMachine());
+
+		return ((DWORD)&oplist - (DWORD)getJassMachine()->code_table->codes) / 4;
 	}
 
 } JASS_OPLIST, * PJASS_OPLIST;

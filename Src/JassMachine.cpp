@@ -24,7 +24,7 @@ DWORD _declspec(naked) jassOpcodeStartLuaThread() {
 		ret
 	}
 }
-
+// game.dll + 45969d
 void jassOpcodeInitialize() {
 	DWORD overflow = MakePtr(gameBase, _overflowOpcodeProc);
 	memcpy(OPCODES_FUNCTIONS, (LPVOID)MakePtr(gameBase, _opcodeList), sizeof(OPCODES_FUNCTIONS));

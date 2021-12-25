@@ -6,6 +6,7 @@
 #include "JassNatives.h"
 
 #define lua_registerJassNative(L, n, f) (lua_pushstring(L, (n)), lua_pushcclosure(L, (f), 1), lua_setglobal(L, (n)))
+#define lua_setint(L, n, v) (lua_pushinteger(L, v), lua_setglobal(L, n))
 
 LUA lua_jCall(lua_State* l) {
 	LPCSTR name = lua_tostring(l, lua_upvalueindex(1));
@@ -105,6 +106,8 @@ LUA lua_jCall(lua_State* l) {
 
 	return native.get_rettype() != TYPE_NOTHING ? 1 : 0;
 }
+
+//-------------------------------------------------------------
 
 LUA lua_GetMouseWorldPos(lua_State* l) {
 	PVECTOR3 mousePos = GetMouseWorldPos();
@@ -211,6 +214,122 @@ LUA lua_ConvertHandleToObject(lua_State* l) {
 
 //-------------------------------------------------------------
 
+LUA lua_GetOriginFrame(lua_State* l) {
+	lua_pushinteger(l, GetOriginFrame((EOriginFrame)lua_tointeger(l, 1), (UINT)lua_tointeger(l, 2)));
+
+	return 1;
+}
+
+LUA lua_LoadTOCFile(lua_State* l) {
+	lua_pushinteger(l, LoadTOCFile(lua_tostring(l, 1)));
+
+	return 1;
+}
+
+LUA lua_GetFrameByName(lua_State* l) {
+	lua_pushinteger(l, GetFrameByName(lua_tostring(l, 1), (UINT)lua_tointeger(l, 2)));
+
+	return 1;
+}
+
+LUA lua_CreateFrame(lua_State* l) {
+	lua_pushinteger(l, CreateFrame(lua_tostring(l, 1), (UINT)lua_tointeger(l, 2), (EFramePoint)lua_tointeger(l, 3), (EFramePoint)lua_tointeger(l, 4), (UINT)lua_tointeger(l, 5)));
+
+	return 1;
+}
+
+LUA lua_SetFrameText(lua_State* l) {
+	SetFrameText((UINT)lua_tointeger(l, 1), lua_tostring(l, 2));
+
+	return 0;
+}
+
+LUA lua_SetFrameTextColor(lua_State* l) {
+	SetFrameTextColor((UINT)lua_tointeger(l, 1), (BYTE)lua_tointeger(l, 2), (BYTE)lua_tointeger(l, 3), (BYTE)lua_tointeger(l, 4), (BYTE)lua_tointeger(l, 5));
+
+	return 0;
+}
+
+LUA lua_GetFrameTextHeight(lua_State* l) {
+	lua_pushnumber(l, GetFrameTextHeight((UINT)lua_tointeger(l, 1)));
+
+	return 1;
+}
+
+LUA lua_SetFrameWidth(lua_State* l) {
+	SetFrameWidth((UINT)lua_tointeger(l, 1), (float)lua_tonumber(l, 2));
+
+	return 0;
+}
+
+LUA lua_SetFrameHeight(lua_State* l) {
+	SetFrameHeight((UINT)lua_tointeger(l, 1), (float)lua_tonumber(l, 2));
+
+	return 0;
+}
+
+LUA lua_SetFrameSize(lua_State* l) {
+	SetFrameSize((UINT)lua_tointeger(l, 1), (float)lua_tonumber(l, 2), (float)lua_tonumber(l, 3));
+
+	return 0;
+}
+
+LUA lua_SetFrameScale(lua_State* l) {
+	SetFrameScale((UINT)lua_tointeger(l, 1), (float)lua_tonumber(l, 2));
+
+	return 0;
+}
+
+LUA lua_SetFrameAbsolutePoint(lua_State* l) {
+	SetFrameAbsolutePoint((UINT)lua_tointeger(l, 1), (EFramePoint)lua_tointeger(l, 2), (float)lua_tonumber(l, 3), (float)lua_tonumber(l, 4));
+
+	return 0;
+}
+
+LUA lua_SetFramePoint(lua_State* l) {
+	SetFramePoint((UINT)lua_tointeger(l, 1), (EFramePoint)lua_tointeger(l, 2), (UINT)lua_tointeger(l, 3), (EFramePoint)lua_tointeger(l, 4), (float)lua_tonumber(l, 5), (float)lua_tonumber(l, 6));
+
+	return 0;
+}
+
+LUA lua_GetFrameWidth(lua_State* l) {
+	lua_pushnumber(l, GetFrameWidth((UINT)lua_tointeger(l, 1)));
+
+	return 1;
+}
+
+LUA lua_GetFrameHeight(lua_State* l) {
+	lua_pushnumber(l, GetFrameHeight((UINT)lua_tointeger(l, 1)));
+
+	return 1;
+}
+
+LUA lua_GetFramePointParent(lua_State* l) {
+	lua_pushinteger(l, GetFramePointParent((UINT)lua_tointeger(l, 1), (EFramePoint)lua_tointeger(l, 2)));
+
+	return 1;
+}
+
+LUA lua_GetFramePointRelativePoint(lua_State* l) {
+	lua_pushinteger(l, GetFramePointRelativePoint((UINT)lua_tointeger(l, 1), (EFramePoint)lua_tointeger(l, 2)));
+
+	return 1;
+}
+
+LUA lua_GetFramePointX(lua_State* l) {
+	lua_pushnumber(l, GetFramePointX((UINT)lua_tointeger(l, 1), (EFramePoint)lua_tointeger(l, 2)));
+
+	return 1;
+}
+
+LUA lua_GetFramePointY(lua_State* l) {
+	lua_pushnumber(l, GetFramePointY((UINT)lua_tointeger(l, 1), (EFramePoint)lua_tointeger(l, 2)));
+
+	return 1;
+}
+
+//-------------------------------------------------------------
+
 void lua_open_jassnatives(lua_State* l) {
 	for (const auto& native : jassnatives) {
 		lua_registerJassNative(l, native.first, lua_jCall);
@@ -234,4 +353,43 @@ void lua_open_warcraftfunctions(lua_State* l) {
 	lua_register(l, "SetObjectZ", lua_SetObjectZ);
 
 	lua_register(l, "ConvertHandleToObject", lua_ConvertHandleToObject);
+
+	lua_setint(l, "ORIGIN_FRAME_GAME_UI", ORIGIN_FRAME_GAME_UI);
+	lua_setint(l, "ORIGIN_FRAME_WORLD_FRAME", ORIGIN_FRAME_WORLD_FRAME);
+	lua_setint(l, "ORIGIN_FRAME_HERO_BAR", ORIGIN_FRAME_HERO_BAR);
+	lua_setint(l, "ORIGIN_FRAME_HERO_BUTTON", ORIGIN_FRAME_HERO_BUTTON);
+	lua_setint(l, "ORIGIN_FRAME_HERO_HP_BAR", ORIGIN_FRAME_HERO_HP_BAR);
+	lua_setint(l, "ORIGIN_FRAME_HERO_MANA_BAR", ORIGIN_FRAME_HERO_MANA_BAR);
+	lua_setint(l, "ORIGIN_FRAME_HERO_BUTTON_INDICATOR", ORIGIN_FRAME_HERO_BUTTON_INDICATOR);
+	lua_setint(l, "ORIGIN_FRAME_ITEM_BUTTON", ORIGIN_FRAME_ITEM_BUTTON);
+	lua_setint(l, "ORIGIN_FRAME_COMMAND_BUTTON", ORIGIN_FRAME_COMMAND_BUTTON);
+	lua_setint(l, "ORIGIN_FRAME_SYSTEM_BUTTON", ORIGIN_FRAME_SYSTEM_BUTTON);
+	lua_setint(l, "ORIGIN_FRAME_PORTRAIT", ORIGIN_FRAME_PORTRAIT);
+	lua_setint(l, "ORIGIN_FRAME_MINIMAP", ORIGIN_FRAME_MINIMAP);
+	lua_setint(l, "ORIGIN_FRAME_MINIMAP_BUTTON", ORIGIN_FRAME_MINIMAP_BUTTON);
+	lua_setint(l, "ORIGIN_FRAME_TOOLTIP", ORIGIN_FRAME_TOOLTIP);
+	lua_setint(l, "ORIGIN_FRAME_UBERTOOLTIP", ORIGIN_FRAME_UBERTOOLTIP);
+	lua_setint(l, "ORIGIN_FRAME_CHAT_MSG", ORIGIN_FRAME_CHAT_MSG);
+	lua_setint(l, "ORIGIN_FRAME_UNIT_MSG", ORIGIN_FRAME_UNIT_MSG);
+	lua_setint(l, "ORIGIN_FRAME_TOP_MSG", ORIGIN_FRAME_TOP_MSG);
+
+	lua_register(l, "GetOriginFrame", lua_GetOriginFrame);
+	lua_register(l, "LoadTOCFile", lua_LoadTOCFile);
+	lua_register(l, "GetFrameByName", lua_GetFrameByName);
+	lua_register(l, "CreateFrame", lua_CreateFrame);
+	lua_register(l, "SetFrameText", lua_SetFrameText);
+	lua_register(l, "SetFrameTextColor", lua_SetFrameTextColor);
+	lua_register(l, "GetFrameTextHeight", lua_GetFrameTextHeight);
+	lua_register(l, "SetFrameWidth", lua_SetFrameWidth);
+	lua_register(l, "SetFrameHeight", lua_SetFrameHeight);
+	lua_register(l, "SetFrameSize", lua_SetFrameSize);
+	lua_register(l, "SetFrameScale", lua_SetFrameScale);
+	lua_register(l, "SetFrameAbsolutePoint", lua_SetFrameAbsolutePoint);
+	lua_register(l, "SetFramePoint", lua_SetFramePoint);
+	lua_register(l, "GetFrameWidth", lua_GetFrameWidth);
+	lua_register(l, "GetFrameHeight", lua_GetFrameHeight);
+	lua_register(l, "GetFramePointParent", lua_GetFramePointParent);
+	lua_register(l, "GetFramePointRelativePoint", lua_GetFramePointRelativePoint);
+	lua_register(l, "GetFramePointX", lua_GetFramePointX);
+	lua_register(l, "GetFramePointY", lua_GetFramePointY);
 }
