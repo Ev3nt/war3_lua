@@ -1,9 +1,7 @@
 #pragma once
 
-#include <Windows.h>
+#include <windows.h>
 
-DWORD __fastcall jassEntryPoint(DWORD a);
+void attachHooks();
 
-DWORD __stdcall getWarcraftID();
-
-//BOOL __fastcall glueButtonOnClick(UINT frame, UINT, BOOL unknown1);
+void detachHooks();

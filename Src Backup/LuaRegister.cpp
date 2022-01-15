@@ -4,6 +4,7 @@
 #include "Variables.h"
 #include "Warcraft.h"
 #include "JassNatives.h"
+#include "FrameAPI.h"
 
 #define lua_registerJassNative(L, n, f) (lua_pushstring(L, (n)), lua_pushcclosure(L, (f), 1), lua_setglobal(L, (n)))
 #define lua_setint(L, n, v) (lua_pushinteger(L, v), lua_setglobal(L, n))
@@ -232,7 +233,14 @@ LUA lua_GetFrameByName(lua_State* l) {
 	return 1;
 }
 
+LUA lua_TriggerRegisterFrameEvent(lua_State* l) {
+	TriggerRegisterFrameEvent(pushFunctionRef(l, 1), (UINT)lua_tointeger(l, 2), (EFrameEvent)lua_tointeger(l, 3));
+
+	return 0;
+}
+
 LUA lua_CreateFrame(lua_State* l) {
+	getGlobalTable(l, "_LUA_FRAMES", false);
 	lua_pushinteger(l, CreateFrame(lua_tostring(l, 1), (UINT)lua_tointeger(l, 2), (EFramePoint)lua_tointeger(l, 3), (EFramePoint)lua_tointeger(l, 4), (UINT)lua_tointeger(l, 5)));
 
 	return 1;
@@ -337,6 +345,8 @@ void lua_open_jassnatives(lua_State* l) {
 }
 
 void lua_open_warcraftfunctions(lua_State* l) {
+	lua_register(l, "TriggerRegisterFrameEvent", lua_TriggerRegisterFrameEvent);
+
 	lua_register(l, "GetMouseWorldPos", lua_GetMouseWorldPos);
 	lua_register(l, "GetMouseWorldX", lua_GetMouseWorldX);
 	lua_register(l, "GetMouseWorldY", lua_GetMouseWorldY);

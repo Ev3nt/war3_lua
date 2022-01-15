@@ -2,10 +2,12 @@
 
 #include <Windows.h>
 #include <map>
+#include <unordered_map>
 
 #include "fcalls.h"
 #include "JassNatives.h"
 #include "JassMachine.h"
+#include "FrameAPI.h"
 
 #define WAR3_LUA_MAJOR "1"
 #define WAR3_LUA_MINOR "1"
@@ -62,8 +64,13 @@ enum OFFSETS {
 	_setCLayoutFrameHeight = 0x605db0,
 	_setCLayoutFrameAbsolutePoint = 0x6061b0,
 	_setCLayoutFrameCageMouse = 0x604fc0,
-	_setCLayoutFrameAllPoints = 0x6067f0
+	_setCLayoutFrameAllPoints = 0x6067f0,
+
+	_frameevent_control_click = 0xa9a86c,
+	_frameevent_control_mouseenter = 0xa9a84c
 };
 
 extern std::map<LPCSTR, JASSNATIVE> jassnatives;
 extern std::map<DWORD, JASS_OPLIST> triggers;
+extern std::unordered_map<EFrameEvent, std::unordered_map<UINT, UINT>> frameEventHashTable;
+extern bool running;

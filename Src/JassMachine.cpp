@@ -1,44 +1,34 @@
 #include "JassMachine.h"
-
-#include "Variables.h"
-#include "Mem.h"
 #include "LuaMachine.h"
+#include "Global.h"
 
-DWORD OPCODES_FUNCTIONS[44];
+PVOID** ppOpcodeList = (PVOID**)((UINT_PTR)gameBase + 0x45ea5a);
+BYTE* pOpcodeListSize = (BYTE*)((UINT_PTR)gameBase + 0x45ea4d);
+PVOID opcodeDefaultOut = (PVOID)((UINT_PTR)gameBase + 0x45f79a);
 
-DWORD _declspec(naked) jassOpcodeStartLuaThread() {
+PVOID OPCODE_FUNCTIONS[44];
+
+DWORD _declspec(naked) opcodeStartLuaThread() {
 	_asm {
-		push edi
 		push esi
 		call startLuaThread
 
-		sub esp, 8
-		mov[esp], eax
-		add esp, 8
-		mov eax, gameBase
-		add eax, 0x45f79a
-		push eax
-		sub esp, 4
-		pop eax
-
+		push opcodeDefaultOut
 		ret
 	}
 }
-// game.dll + 45969d
+
 void jassOpcodeInitialize() {
-	DWORD overflow = MakePtr(gameBase, _overflowOpcodeProc);
-	memcpy(OPCODES_FUNCTIONS, (LPVOID)MakePtr(gameBase, _opcodeList), sizeof(OPCODES_FUNCTIONS));
-	OPCODES_FUNCTIONS[42] = overflow;
-	OPCODES_FUNCTIONS[43] = (DWORD)jassOpcodeStartLuaThread; // My own opcode function
+	 memcpy(OPCODE_FUNCTIONS, *ppOpcodeList, sizeof(OPCODE_FUNCTIONS));
 
-	DWORD dwOldProtect;
-	DWORD address = MakePtr(gameBase, _opcodeListSize);
-	VirtualProtect((LPVOID)address, 1, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-	*(BYTE*)address = sizeof(OPCODES_FUNCTIONS) / 4 - 1;
-	VirtualProtect((LPVOID)address, 1, dwOldProtect, &dwOldProtect);
+	 OPCODE_FUNCTIONS[OPTYPE_STARTLUATHREAD - 2] = opcodeStartLuaThread; // My own opcode function
 
-	address = MakePtr(gameBase, _opcodeSwitch);
-	VirtualProtect((LPVOID)address, 4, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-	*(DWORD*)address = (DWORD)OPCODES_FUNCTIONS;
-	VirtualProtect((LPVOID)address, 4, dwOldProtect, &dwOldProtect);
+	 DWORD dwOldProtect;
+	 VirtualProtect(pOpcodeListSize, 1, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+	 *pOpcodeListSize = sizeof(OPCODE_FUNCTIONS) / 4 - 1;
+	 VirtualProtect(pOpcodeListSize, 1, dwOldProtect, &dwOldProtect);
+
+	 VirtualProtect(ppOpcodeList, 4, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+	 *ppOpcodeList = OPCODE_FUNCTIONS;
+	 VirtualProtect(ppOpcodeList, 4, dwOldProtect, &dwOldProtect);
 }

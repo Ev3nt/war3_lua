@@ -10218,35 +10218,46 @@ end
 -- 
 -- ***************************************************************************
 
-function GetEffectPos(effect)
-	return GetObjectPos(effect)
-end
+-- function GetEffectPos(effect)
+-- 	return GetObjectPos(effect)
+-- end
 
-function GetEffectX(effect)
-	return GetObjectX(effect)
-end
+-- function GetEffectX(effect)
+-- 	return GetObjectX(effect)
+-- end
 
-function GetEffectY(effect)
-	return GetObjectY(effect)
-end
+-- function GetEffectY(effect)
+-- 	return GetObjectY(effect)
+-- end
 
-function GetEffectZ(effect)
-	return GetObjectZ(effect)
-end
+-- function GetEffectZ(effect)
+-- 	return GetObjectZ(effect)
+-- end
 
-function SetEffectPos(effect, x, y, z)
-	SetObjectPos(effect, x, y, z)
-end
+-- function SetEffectPos(effect, x, y, z)
+-- 	SetObjectPos(effect, x, y, z)
+-- end
 
-function SetEffectX(effect, x)
-	SetObjectX(effect, x)
-end
+-- function SetEffectX(effect, x)
+-- 	SetObjectX(effect, x)
+-- end
 
-function SetEffectY(effect, y)
-	SetObjectY(effect, y)
-end
-function SetEffectZ(effect, z)
-	SetObjectZ(effect, z)
+-- function SetEffectY(effect, y)
+-- 	SetObjectY(effect, y)
+-- end
+-- function SetEffectZ(effect, z)
+-- 	SetObjectZ(effect, z)
+-- end
+
+function _print(...)
+	local string = ""
+
+	for i,v in ipairs({...}) do
+        string = string..tostring(v)
+     end
+   
+   print(string)
+   DisplayTimedTextToPlayer(GetLocalPlayer(), 0, 0, 60, string)
 end
 
 -- ===========================================================================
