@@ -1,4 +1,4 @@
-# War3 Lua - 1.1.4 (<span style="color:green">Ashenvale</span>)
+# War3 Lua - 1.1.5 (<span style="color:green">Ashenvale</span> - Experimental)
 
 [![build](https://github.com/Ev3nt/war3_lua/actions/workflows/build.yml/badge.svg)](https://github.com/Ev3nt/war3_lua/actions/workflows/build.yml)
 

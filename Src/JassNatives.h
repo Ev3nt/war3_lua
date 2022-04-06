@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <vector>
 #include <unordered_map>
+#include <string>
 #include <lua.hpp>
 #include "JassMachine.h"
 
@@ -48,7 +49,11 @@ inline PCSTR from_string(UINT string) {
 	return (PCSTR)((UINT*)string)[7];
 }
 
-UINT to_code(lua_State* l, int index);
+UINT GetGroupByHandle(UINT handle);
+UINT GetTriggerByHandle(UINT handle);
+UINT GetTimerByHandle(UINT handle);
+
+UINT to_code(lua_State* l, int index, UINT objectHandle);
 
 inline DWORD to_ID(LPCSTR lpID) {
 	return (lpID[0] << 24) + (lpID[1] << 16) + (lpID[2] << 8) + lpID[3];

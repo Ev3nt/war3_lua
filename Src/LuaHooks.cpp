@@ -4,6 +4,8 @@
 #include <vector>
 #include "Global.h"
 
+#include "MemHack.h"
+
 //---------------------------------------------------------------------------------
 // Loader lua from mpq
 
@@ -241,4 +243,57 @@ void lua_replaceFileStreamFunctions(lua_State* l) {
 	lua_setfield(l, -2, "rename");
 
 	lua_pop(l, 1);
+}
+
+//---------------------------------------------------------------------------------
+// print
+
+int lua_printc(lua_State* L) {
+	int n = lua_gettop(L);
+	int i;
+
+	for (i = 1; i <= n; i++) {
+		size_t l;
+		LPCSTR s = luaL_tolstring(L, i, &l);
+
+		if (i > 1) {
+			lua_writestring("\t", 1);
+		}
+
+		lua_writestring(s, l);
+		lua_pop(L, 1);
+	}
+
+	lua_writeline();
+
+	return 0;
+}
+
+int lua_print(lua_State* L) {
+	int n = lua_gettop(L);
+	int i;
+
+	for (i = 1; i <= n; i++) {
+		size_t l;
+		LPCSTR s = luaL_tolstring(L, i, &l);
+
+		if (i > 1) {
+			printChat("\t", 60.f);
+		}
+
+		printChat(luaL_tolstring(L, -1, NULL), 60.f);
+		lua_pop(L, 1);
+	}
+
+	return 0;
+}
+
+//---------------------------------------------------------------------------------
+
+void lua_replaceGlobals(lua_State* l) {
+	lua_pushcfunction(l, lua_printc);
+	lua_setglobal(l, "printc");
+
+	lua_pushcfunction(l, lua_print);
+	lua_setglobal(l, "print");
 }

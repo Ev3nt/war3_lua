@@ -72,26 +72,26 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)Build\bin\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)Build\obj\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)Build\bin\</OutDir>
+    <IntDir>$(SolutionDir)Build\obj\</IntDir>
     <TargetExt>.mix</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)Build\bin\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)Build\obj\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)Build\bin\</OutDir>
+    <IntDir>$(SolutionDir)Build\obj\</IntDir>
     <TargetExt>.mix</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)Build\bin\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)Build\obj\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)Build\bin\</OutDir>
+    <IntDir>$(SolutionDir)Build\obj\</IntDir>
     <TargetExt>.mix</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)Build\bin\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)Build\obj\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)Build\bin\</OutDir>
+    <IntDir>$(SolutionDir)Build\obj\</IntDir>
     <TargetExt>.mix</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -100,13 +100,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rd\StormLib\include;$(SolutionDir)3rd\Detours\include;$(SolutionDir)3rd\lua\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rd\StormLib\include;$(SolutionDir)3rd\Detours\include;$(SolutionDir)3rd\lua</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)3rd\StormLib\Build\bin\Release\Win32;$(SolutionDir)3rd\Detours\lib;$(SolutionDir)3rd\lua\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>detours.lib;storm.lib;lua.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)3rd\StormLib\Build\bin\Release\Win32;$(SolutionDir)3rd\Detours\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>detours.lib;storm.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -117,15 +117,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rd\StormLib\include;$(SolutionDir)3rd\Detours\include;$(SolutionDir)3rd\lua\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rd\StormLib\include;$(SolutionDir)3rd\Detours\include;$(SolutionDir)3rd\lua</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)3rd\StormLib\Build\bin\Release\Win32;$(SolutionDir)3rd\Detours\lib;$(SolutionDir)3rd\lua\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>detours.lib;storm.lib;lua.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)3rd\StormLib\Build\bin\Release\Win32;$(SolutionDir)3rd\Detours\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>detours.lib;storm.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -134,13 +134,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rd\StormLib\include;$(SolutionDir)3rd\Detours\include;$(SolutionDir)3rd\lua\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rd\StormLib\include;$(SolutionDir)3rd\Detours\include;$(SolutionDir)3rd\lua</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)3rd\StormLib\Build\bin\Release\Win32;$(SolutionDir)3rd\Detours\lib;$(SolutionDir)3rd\lua\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>detours.lib;storm.lib;lua.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)3rd\StormLib\Build\bin\Release\Win32;$(SolutionDir)3rd\Detours\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>detours.lib;storm.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -151,15 +151,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rd\StormLib\include;$(SolutionDir)3rd\Detours\include;$(SolutionDir)3rd\lua\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rd\StormLib\include;$(SolutionDir)3rd\Detours\include;$(SolutionDir)3rd\lua</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)3rd\StormLib\Build\bin\Release\Win32;$(SolutionDir)3rd\Detours\lib;$(SolutionDir)3rd\lua\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>detours.lib;storm.lib;lua.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)3rd\StormLib\Build\bin\Release\Win32;$(SolutionDir)3rd\Detours\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>detours.lib;storm.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -171,6 +171,40 @@
     <Image Include="war3_lua.png" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="3rd\lua\lapi.c" />
+    <ClCompile Include="3rd\lua\lauxlib.c" />
+    <ClCompile Include="3rd\lua\lbaselib.c" />
+    <ClCompile Include="3rd\lua\lcode.c" />
+    <ClCompile Include="3rd\lua\lcorolib.c" />
+    <ClCompile Include="3rd\lua\lctype.c" />
+    <ClCompile Include="3rd\lua\ldblib.c" />
+    <ClCompile Include="3rd\lua\ldebug.c" />
+    <ClCompile Include="3rd\lua\ldo.c" />
+    <ClCompile Include="3rd\lua\ldump.c" />
+    <ClCompile Include="3rd\lua\lfunc.c" />
+    <ClCompile Include="3rd\lua\lgc.c" />
+    <ClCompile Include="3rd\lua\linit.c" />
+    <ClCompile Include="3rd\lua\liolib.c" />
+    <ClCompile Include="3rd\lua\llex.c" />
+    <ClCompile Include="3rd\lua\lmathlib.c" />
+    <ClCompile Include="3rd\lua\lmem.c" />
+    <ClCompile Include="3rd\lua\loadlib.c" />
+    <ClCompile Include="3rd\lua\lobject.c" />
+    <ClCompile Include="3rd\lua\lopcodes.c" />
+    <ClCompile Include="3rd\lua\loslib.c" />
+    <ClCompile Include="3rd\lua\lparser.c" />
+    <ClCompile Include="3rd\lua\lstate.c" />
+    <ClCompile Include="3rd\lua\lstring.c" />
+    <ClCompile Include="3rd\lua\lstrlib.c" />
+    <ClCompile Include="3rd\lua\ltable.c" />
+    <ClCompile Include="3rd\lua\ltablib.c" />
+    <ClCompile Include="3rd\lua\ltm.c" />
+    <ClCompile Include="3rd\lua\lua.c" />
+    <ClCompile Include="3rd\lua\luac.c" />
+    <ClCompile Include="3rd\lua\lundump.c" />
+    <ClCompile Include="3rd\lua\lutf8lib.c" />
+    <ClCompile Include="3rd\lua\lvm.c" />
+    <ClCompile Include="3rd\lua\lzio.c" />
     <ClCompile Include="Src\GameUI.cpp" />
     <ClCompile Include="Src\Hooks.cpp" />
     <ClCompile Include="Src\JassMachine.cpp" />
@@ -179,10 +213,39 @@
     <ClCompile Include="Src\LuaHooks.cpp" />
     <ClCompile Include="Src\LuaMachine.cpp" />
     <ClCompile Include="Src\Main.cpp" />
+    <ClCompile Include="Src\MemHack.cpp" />
     <ClCompile Include="Src\Utils.cpp" />
     <ClCompile Include="Src\Warcraft.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="3rd\lua\lapi.h" />
+    <ClInclude Include="3rd\lua\lauxlib.h" />
+    <ClInclude Include="3rd\lua\lcode.h" />
+    <ClInclude Include="3rd\lua\lctype.h" />
+    <ClInclude Include="3rd\lua\ldebug.h" />
+    <ClInclude Include="3rd\lua\ldo.h" />
+    <ClInclude Include="3rd\lua\lfunc.h" />
+    <ClInclude Include="3rd\lua\lgc.h" />
+    <ClInclude Include="3rd\lua\ljumptab.h" />
+    <ClInclude Include="3rd\lua\llex.h" />
+    <ClInclude Include="3rd\lua\llimits.h" />
+    <ClInclude Include="3rd\lua\lmem.h" />
+    <ClInclude Include="3rd\lua\lobject.h" />
+    <ClInclude Include="3rd\lua\lopcodes.h" />
+    <ClInclude Include="3rd\lua\lopnames.h" />
+    <ClInclude Include="3rd\lua\lparser.h" />
+    <ClInclude Include="3rd\lua\lprefix.h" />
+    <ClInclude Include="3rd\lua\lstate.h" />
+    <ClInclude Include="3rd\lua\lstring.h" />
+    <ClInclude Include="3rd\lua\ltable.h" />
+    <ClInclude Include="3rd\lua\ltm.h" />
+    <ClInclude Include="3rd\lua\lua.h" />
+    <ClInclude Include="3rd\lua\lua.hpp" />
+    <ClInclude Include="3rd\lua\luaconf.h" />
+    <ClInclude Include="3rd\lua\lualib.h" />
+    <ClInclude Include="3rd\lua\lundump.h" />
+    <ClInclude Include="3rd\lua\lvm.h" />
+    <ClInclude Include="3rd\lua\lzio.h" />
     <ClInclude Include="Src\GameUI.h" />
     <ClInclude Include="Src\Global.h" />
     <ClInclude Include="Src\Hooks.h" />
@@ -191,6 +254,7 @@
     <ClInclude Include="Src\LuaFunctions.h" />
     <ClInclude Include="Src\LuaHooks.h" />
     <ClInclude Include="Src\LuaMachine.h" />
+    <ClInclude Include="Src\MemHack.h" />
     <ClInclude Include="Src\Utils.h" />
     <ClInclude Include="Src\Warcraft.h" />
   </ItemGroup>

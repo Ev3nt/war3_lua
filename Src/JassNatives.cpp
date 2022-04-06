@@ -38,20 +38,34 @@ public:
 	}
 };
 
+UINT GetGroupByHandle(UINT handle) {
+	return ((UINT(__fastcall*)(UINT))((UINT_PTR)gameBase + 0x3bea30))(handle);
+}
+
+UINT GetTriggerByHandle(UINT handle) {
+	return ((UINT(__fastcall*)(UINT))((UINT_PTR)gameBase + 0x3bdef0))(handle);
+}
+
+UINT GetTimerByHandle(UINT handle) {
+	return ((UINT(__fastcall*)(UINT))((UINT_PTR)gameBase + 0x3bd710))(handle);
+}
+
 //---------------------------------------------------------
 
-UINT to_code(lua_State* l, int index) {
+UINT to_code(lua_State* l, int index, UINT objectHandle) {
 	DWORD key = (DWORD)lua_topointer(l, index);
 
 	auto it = triggers.find(key);
 
 	if (it != triggers.end()) {
-		return (UINT)&it->second;
+		return it->second.getcode();
 	}
 
 	JASS_OPLIST& oplist = triggers[key];
 
 	BYTE reg = 0xD8;
+	oplist.addop(OPTYPE_MOVRLITERAL, reg, objectHandle, OPCODE_VARIABLE_INTEGER);
+	oplist.addop(OPTYPE_PUSH, reg);
 	oplist.addop(OPTYPE_MOVRLITERAL, reg, pushFunctionRef(l, index), OPCODE_VARIABLE_INTEGER);
 	oplist.addop(OPTYPE_PUSH, reg);
 	oplist.addop(OPTYPE_MOVRLITERAL, reg, (DWORD)l, OPCODE_VARIABLE_INTEGER);

@@ -1,7 +1,9 @@
 #include "LuaFunctions.h"
 #include "JassNatives.h"
 #include "GameUI.h"
+#include "MemHack.h"
 #include "Warcraft.h"
+#include "Utils.h"
 
 #define lua_registerJassNative(L, n, f) (lua_pushstring(L, (n)), lua_pushcclosure(L, (f), 1), lua_setglobal(L, (n)))
 #define lua_registerex(L, n, c, f) (lua_pushstring(L, (n)), lua_pushinteger(L, (c)), lua_pushcclosure(L, (f), 2), lua_setglobal(L, (n)))
@@ -15,6 +17,12 @@ BOOL checkParams(lua_State* l) {
 		return luaL_error(l, "function '%s' must have %d %s", name, size, size > 1 ? "arguments" : "argument");
 	}
 
+	for (int i = 1; i <= size; i++) {
+		if (lua_isnil(l, i)) {
+			return luaL_error(l, "Argument number %d of function '%s' mustn't be equal to nil", i, name);
+		}
+	}
+
 	return FALSE;
 }
 
@@ -22,8 +30,8 @@ BOOL checkParams(lua_State* l) {
 // JassNatives
 
 int lua_callNative(lua_State* l) {
-	LPCSTR name = lua_tostring(l, lua_upvalueindex(1));
-	JASSNATIVE native = get_native(name);
+	std::string name = lua_tostring(l, lua_upvalueindex(1));
+	JASSNATIVE native = get_native(name.c_str());
 
 	if (!native.is_valid()) {
 		return 0;
@@ -31,7 +39,13 @@ int lua_callNative(lua_State* l) {
 
 	int size = native.get_params().size();
 	if (size > lua_gettop(l)) {
-		return luaL_error(l, "function '%s' must have %d %s", name, size, size > 1 ? "arguments" : "argument");
+		return luaL_error(l, "function '%s' must have %d %s", name.c_str(), size, size > 1 ? "arguments" : "argument");
+	}
+	
+	for (int i = 1; i <= size; i++) {
+		if (lua_isnil(l, i)) {
+			return luaL_error(l, "Argument number %d of function '%s' mustn't be equal to nil", i, name.c_str());
+		}
 	}
 
 	size = lua_gettop(l);
@@ -49,7 +63,7 @@ int lua_callNative(lua_State* l) {
 				params[i - 1] = (DWORD)lua_tointeger(l, i);
 			}
 			else if (lua_isfunction(l, i)) {
-				params[i - 1] = to_code(l, i);
+				params[i - 1] = to_code(l, i, (UINT)lua_touserdata(l, 1));
 			}
 
 			break;
@@ -58,7 +72,7 @@ int lua_callNative(lua_State* l) {
 
 			break;
 		case TYPE_HANDLE:
-			params[i - 1] = (DWORD)lua_tointeger(l, i);
+			params[i - 1] = (DWORD)lua_touserdata(l, i);
 
 			break;
 		case TYPE_INTEGER:
@@ -77,7 +91,7 @@ int lua_callNative(lua_State* l) {
 			break;
 		}
 		case TYPE_STRING:
-			params[i - 1] = to_string(lua_tostring(l, i));
+			params[i - 1] = to_string(cp1251_to_utf8(lua_tostring(l, i)).c_str());
 
 			break;
 		default:
@@ -98,11 +112,23 @@ int lua_callNative(lua_State* l) {
 		lua_pushboolean(l, result);
 
 		break;
-
-	case TYPE_CODE:
-	case TYPE_HANDLE:
 	case TYPE_INTEGER:
+		if (name == "GetUnitTypeId" || name == "GetSpellAbilityId" || name == "GetItemTypeId") {
+			std::swap(((LPSTR)&result)[0], ((LPSTR)&result)[3]);
+			std::swap(((LPSTR)&result)[1], ((LPSTR)&result)[2]);
+			lua_pushlstring(l, (LPSTR)&result, 4);
+		}
+		else {
+			lua_pushinteger(l, result);
+		}
+
+		break;
+	case TYPE_CODE:
 		lua_pushinteger(l, result);
+
+		break;
+	case TYPE_HANDLE:
+		lua_pushlightuserdata(l, (PVOID)result);
 
 		break;
 	case TYPE_REAL:
@@ -110,7 +136,7 @@ int lua_callNative(lua_State* l) {
 
 		break;
 	case TYPE_STRING:
-		lua_pushstring(l, from_string(getJassMachine()->string_table->get(result)));
+		lua_pushstring(l, utf8_to_cp1251(from_string(getJassMachine()->string_table->get(result))).c_str());
 
 		break;
 	}
@@ -134,13 +160,406 @@ void lua_openJassNatives(lua_State* l) {
 //--------------------------------------------------------
 // FrameAPI
 
+int lua_SetUnitArmor(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetUnitArmor((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
+
+	return 0;
+}
+
+int lua_GetUnitArmor(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushnumber(l, GetUnitArmor((UINT)lua_touserdata(l, 1)));
+
+	return 1;
+}
+
+int lua_GetUnitMaxLife(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushnumber(l, GetUnitMaxLife((UINT)lua_touserdata(l, 1)));
+
+	return 1;
+}
+
+int lua_SetUnitMaxLife(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetUnitMaxLife((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
+
+	return 0;
+}
+
+int lua_GetUnitMaxMana(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushnumber(l, GetUnitMaxMana((UINT)lua_touserdata(l, 1)));
+
+	return 1;
+}
+
+int lua_SetUnitMaxMana(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetUnitMaxMana((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
+
+	return 0;
+}
+
+int lua_GetUnitLifeRegen(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushnumber(l, GetUnitLifeRegen((UINT)lua_touserdata(l, 1)));
+
+	return 1;
+}
+
+int lua_SetUnitLifeRegen(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetUnitLifeRegen((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
+
+	return 0;
+}
+
+int lua_GetUnitManaRegen(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushnumber(l, GetUnitManaRegen((UINT)lua_touserdata(l, 1)));
+
+	return 1;
+}
+
+int lua_SetUnitManaRegen(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetUnitManaRegen((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
+
+	return 0;
+}
+
+int lua_GetUnitBaseDamage(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushinteger(l, GetUnitBaseDamage((UINT)lua_touserdata(l, 1)));
+
+	return 1;
+}
+
+int lua_SetUnitBaseDamage(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetUnitBaseDamage((UINT)lua_touserdata(l, 1), (UINT)lua_tointeger(l, 2));
+
+	return 0;
+}
+
+int lua_GetUnitAttackSpeed(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushnumber(l, GetUnitAttackSpeed((UINT)lua_touserdata(l, 1)));
+
+	return 1;
+}
+
+int lua_SetUnitAttackSpeed(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetUnitAttackSpeed((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
+
+	return 0;
+}
+
+int lua_UnitResetAttackCooldown(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushboolean(l, UnitResetAttackCooldown((UINT)lua_touserdata(l, 1)));
+
+	return 1;
+}
+
+int lua_GetItemBaseNameById(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushstring(l, utf8_to_cp1251(GetItemBaseNameById(to_ID(lua_tostring(l, 1)))).c_str());
+
+	return 1;
+}
+
+int lua_SetItemBaseNameById(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetItemBaseNameById(to_ID(lua_tostring(l, 1)), cp1251_to_utf8(lua_tostring(l, 2)).c_str());
+
+	return 0;
+}
+
+int lua_GetItemBaseUbertipById(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushstring(l, utf8_to_cp1251(GetItemBaseUbertipById(to_ID(lua_tostring(l, 1)))).c_str());
+
+	return 1;
+}
+
+int lua_SetItemBaseUbertipById(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetItemBaseUbertipById(to_ID(lua_tostring(l, 1)), cp1251_to_utf8(lua_tostring(l, 2)).c_str());
+
+	return 0;
+}
+
+int lua_GetItemBaseIconPathById(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushstring(l, utf8_to_cp1251(GetItemBaseIconPathById(to_ID(lua_tostring(l, 1)))).c_str());
+
+	return 1;
+}
+
+int lua_SetItemBaseIconPathById(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetItemBaseIconPathById(to_ID(lua_tostring(l, 1)), cp1251_to_utf8(lua_tostring(l, 2)).c_str());
+
+	return 0;
+}
+
+int lua_GetMouseWorldPos(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	PVECTOR3 mousePos = GetMouseWorldPos();
+
+	lua_pushnumber(l, mousePos->_x);
+	lua_pushnumber(l, mousePos->_y);
+	lua_pushnumber(l, mousePos->_z);
+
+	return 3;
+}
+
+int lua_GetMouseWorldX(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushnumber(l, GetMouseWorldX());
+
+	return 1;
+}
+
+int lua_GetMouseWorldY(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushnumber(l, GetMouseWorldY());
+
+	return 1;
+}
+
+int lua_GetMouseWorldZ(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushnumber(l, GetMouseWorldZ());
+
+	return 1;
+}
+
+int lua_GetEffectPos(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	PVECTOR3 objectPos = GetEffectPos((UINT)lua_touserdata(l, 1));
+
+	lua_pushnumber(l, objectPos->_x);
+	lua_pushnumber(l, objectPos->_y);
+	lua_pushnumber(l, objectPos->_z);
+
+	return 3;
+}
+
+int lua_GetEffectX(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushnumber(l, GetEffectPos((UINT)lua_touserdata(l, 1))->_x);
+
+	return 1;
+}
+
+int lua_GetEffectY(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushnumber(l, GetEffectPos((UINT)lua_touserdata(l, 1))->_y);
+
+	return 1;
+}
+
+int lua_GetEffectZ(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	lua_pushnumber(l, GetEffectPos((UINT)lua_touserdata(l, 1))->_z);
+
+	return 1;
+}
+
+int lua_SetEffectPos(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	UINT_PTR object = (UINT)lua_touserdata(l, 1);
+
+	switch (lua_gettop(l))
+	{
+	case 2:
+		SetEffectX(object, (float)lua_tonumber(l, 2));
+
+		break;
+	case 3:
+		SetEffectX(object, (float)lua_tonumber(l, 2));
+		SetEffectY(object, (float)lua_tonumber(l, 3));
+
+		break;
+	case 4:
+		SetEffectPos(object, VECTOR3((float)lua_tonumber(l, 2), (float)lua_tonumber(l, 3), (float)lua_tonumber(l, 4)));
+
+		break;
+	}
+
+	return 0;
+}
+
+int lua_SetEffectX(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetEffectX((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
+
+	return 0;
+}
+
+int lua_SetEffectY(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetEffectY((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
+
+	return 0;
+}
+
+int lua_SetEffectZ(lua_State* l) {
+	BOOL error = checkParams(l);
+	if (error) {
+		return error;
+	}
+
+	SetEffectZ((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
+
+	return 0;
+}
+
+//--------------------------------------------------------
+
+//--------------------------------------------------------
+// FrameAPI
+
 int lua_GetOriginFrame(lua_State* l) {
 	BOOL error = checkParams(l);
 	if (error) {
 		return error;
 	}
 
-	lua_pushinteger(l, GetOriginFrame((EOriginFrame)lua_tointeger(l, 1), (UINT)lua_tointeger(l, 2)));
+	lua_pushlightuserdata(l, (PVOID)GetOriginFrame((EOriginFrame)lua_tointeger(l, 1), (UINT)lua_tointeger(l, 2)));
 
 	return 1;
 }
@@ -151,7 +570,7 @@ int lua_LoadTOCFile(lua_State* l) {
 		return error;
 	}
 
-	lua_pushinteger(l, LoadTOCFile(lua_tostring(l, 1)));
+	lua_pushboolean(l, LoadTOCFile(cp1251_to_utf8(lua_tostring(l, 1)).c_str()));
 
 	return 1;
 }
@@ -162,7 +581,7 @@ int lua_GetFrameByName(lua_State* l) {
 		return error;
 	}
 
-	lua_pushinteger(l, GetFrameByName(lua_tostring(l, 1), (UINT)lua_tointeger(l, 2)));
+	lua_pushlightuserdata(l, (PVOID)GetFrameByName(cp1251_to_utf8(lua_tostring(l, 1)).c_str(), (UINT)lua_tointeger(l, 2)));
 
 	return 1;
 }
@@ -173,7 +592,7 @@ int lua_GetFrameParent(lua_State* l) {
 		return error;
 	}
 
-	lua_pushinteger(l, GetFrameParent((UINT)lua_tointeger(l, 1)));
+	lua_pushlightuserdata(l, (PVOID)GetFrameParent((UINT)lua_touserdata(l, 1)));
 
 	return 1;
 }
@@ -184,7 +603,7 @@ int lua_GetFrameChildrenCount(lua_State* l) {
 		return error;
 	}
 
-	lua_pushinteger(l, GetFrameChildrenCount((UINT)lua_tointeger(l, 1)));
+	lua_pushinteger(l, GetFrameChildrenCount((UINT)lua_touserdata(l, 1)));
 
 	return 1;
 }
@@ -195,7 +614,7 @@ int lua_GetFrameChild(lua_State* l) {
 		return error;
 	}
 
-	lua_pushinteger(l, GetFrameChild((UINT)lua_tointeger(l, 1), (UINT)lua_tointeger(l, 2)));
+	lua_pushlightuserdata(l, (PVOID)GetFrameChild((UINT)lua_touserdata(l, 1), (UINT)lua_tointeger(l, 2)));
 
 	return 1;
 }
@@ -206,7 +625,7 @@ int lua_TriggerRegisterFrameEvent(lua_State* l) {
 		return error;
 	}
 
-	TriggerRegisterFrameEvent((UINT)lua_tointeger(l, 1), (UINT)lua_tointeger(l, 2), (EFrameEvent)lua_tointeger(l, 3));
+	TriggerRegisterFrameEvent((UINT)lua_touserdata(l, 1), (UINT)lua_touserdata(l, 2), (EFrameEvent)lua_tointeger(l, 3));
 
 	return 0;
 }
@@ -217,7 +636,7 @@ int lua_CreateFrame(lua_State* l) {
 		return error;
 	}
 
-	lua_pushinteger(l, CreateFrame(lua_tostring(l, 1), (UINT)lua_tointeger(l, 2), (EFramePoint)lua_tointeger(l, 3), (EFramePoint)lua_tointeger(l, 4) /*(UINT)lua_tointeger(l, 5)*/));
+	lua_pushlightuserdata(l, (PVOID)CreateFrame(cp1251_to_utf8(lua_tostring(l, 1)).c_str(), (UINT)lua_touserdata(l, 2), (EFramePoint)lua_tointeger(l, 3), (EFramePoint)lua_tointeger(l, 4) /*(UINT)lua_tointeger(l, 5)*/));
 
 	return 1;
 }
@@ -228,7 +647,7 @@ int lua_SetFrameText(lua_State* l) {
 		return error;
 	}
 
-	SetFrameText((UINT)lua_tointeger(l, 1), lua_tostring(l, 2));
+	SetFrameText((UINT)lua_touserdata(l, 1), cp1251_to_utf8(lua_tostring(l, 2)).c_str());
 
 	return 0;
 }
@@ -239,7 +658,7 @@ int lua_GetFrameText(lua_State* l) {
 		return error;
 	}
 
-	lua_pushstring(l, GetFrameText((UINT)lua_tointeger(l, 1)));
+	lua_pushstring(l, utf8_to_cp1251(GetFrameText((UINT)lua_touserdata(l, 1))).c_str());
 
 	return 1;
 }
@@ -250,7 +669,7 @@ int lua_SetFrameTextColor(lua_State* l) {
 		return error;
 	}
 
-	SetFrameTextColor((UINT)lua_tointeger(l, 1), (BYTE)lua_tointeger(l, 2), (BYTE)lua_tointeger(l, 3), (BYTE)lua_tointeger(l, 4), (BYTE)lua_tointeger(l, 5));
+	SetFrameTextColor((UINT)lua_touserdata(l, 1), (BYTE)lua_tointeger(l, 2), (BYTE)lua_tointeger(l, 3), (BYTE)lua_tointeger(l, 4), (BYTE)lua_tointeger(l, 5));
 
 	return 0;
 }
@@ -261,7 +680,7 @@ int lua_GetFrameTextHeight(lua_State* l) {
 		return error;
 	}
 
-	lua_pushnumber(l, GetFrameTextHeight((UINT)lua_tointeger(l, 1)));
+	lua_pushnumber(l, GetFrameTextHeight((UINT)lua_touserdata(l, 1)));
 
 	return 1;
 }
@@ -272,7 +691,7 @@ int lua_SetFrameWidth(lua_State* l) {
 		return error;
 	}
 
-	SetFrameWidth((UINT)lua_tointeger(l, 1), (float)lua_tonumber(l, 2));
+	SetFrameWidth((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
 
 	return 0;
 }
@@ -283,7 +702,7 @@ int lua_SetFrameHeight(lua_State* l) {
 		return error;
 	}
 
-	SetFrameHeight((UINT)lua_tointeger(l, 1), (float)lua_tonumber(l, 2));
+	SetFrameHeight((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
 
 	return 0;
 }
@@ -294,7 +713,7 @@ int lua_SetFrameSize(lua_State* l) {
 		return error;
 	}
 
-	SetFrameSize((UINT)lua_tointeger(l, 1), (float)lua_tonumber(l, 2), (float)lua_tonumber(l, 3));
+	SetFrameSize((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2), (float)lua_tonumber(l, 3));
 
 	return 0;
 }
@@ -305,7 +724,7 @@ int lua_SetFrameScale(lua_State* l) {
 		return error;
 	}
 
-	SetFrameScale((UINT)lua_tointeger(l, 1), (float)lua_tonumber(l, 2));
+	SetFrameScale((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
 
 	return 0;
 }
@@ -316,7 +735,7 @@ int lua_SetFrameAbsolutePoint(lua_State* l) {
 		return error;
 	}
 
-	SetFrameAbsolutePoint((UINT)lua_tointeger(l, 1), (EFramePoint)lua_tointeger(l, 2), (float)lua_tonumber(l, 3), (float)lua_tonumber(l, 4));
+	SetFrameAbsolutePoint((UINT)lua_touserdata(l, 1), (EFramePoint)lua_tointeger(l, 2), (float)lua_tonumber(l, 3), (float)lua_tonumber(l, 4));
 
 	return 0;
 }
@@ -327,7 +746,7 @@ int lua_SetFramePoint(lua_State* l) {
 		return error;
 	}
 
-	SetFramePoint((UINT)lua_tointeger(l, 1), (EFramePoint)lua_tointeger(l, 2), (UINT)lua_tointeger(l, 3), (EFramePoint)lua_tointeger(l, 4), (float)lua_tonumber(l, 5), (float)lua_tonumber(l, 6));
+	SetFramePoint((UINT)lua_touserdata(l, 1), (EFramePoint)lua_tointeger(l, 2), (UINT)lua_touserdata(l, 3), (EFramePoint)lua_tointeger(l, 4), (float)lua_tonumber(l, 5), (float)lua_tonumber(l, 6));
 
 	return 0;
 }
@@ -338,7 +757,7 @@ int lua_GetFrameWidth(lua_State* l) {
 		return error;
 	}
 
-	lua_pushnumber(l, GetFrameWidth((UINT)lua_tointeger(l, 1)));
+	lua_pushnumber(l, GetFrameWidth((UINT)lua_touserdata(l, 1)));
 
 	return 1;
 }
@@ -349,7 +768,7 @@ int lua_GetFrameHeight(lua_State* l) {
 		return error;
 	}
 
-	lua_pushnumber(l, GetFrameHeight((UINT)lua_tointeger(l, 1)));
+	lua_pushnumber(l, GetFrameHeight((UINT)lua_touserdata(l, 1)));
 
 	return 1;
 }
@@ -360,7 +779,7 @@ int lua_GetFramePointParent(lua_State* l) {
 		return error;
 	}
 
-	lua_pushinteger(l, GetFramePointParent((UINT)lua_tointeger(l, 1), (EFramePoint)lua_tointeger(l, 2)));
+	lua_pushinteger(l, GetFramePointParent((UINT)lua_touserdata(l, 1), (EFramePoint)lua_tointeger(l, 2)));
 
 	return 1;
 }
@@ -371,7 +790,7 @@ int lua_GetFramePointRelativePoint(lua_State* l) {
 		return error;
 	}
 
-	lua_pushinteger(l, GetFramePointRelativePoint((UINT)lua_tointeger(l, 1), (EFramePoint)lua_tointeger(l, 2)));
+	lua_pushinteger(l, GetFramePointRelativePoint((UINT)lua_touserdata(l, 1), (EFramePoint)lua_tointeger(l, 2)));
 
 	return 1;
 }
@@ -382,7 +801,7 @@ int lua_GetFramePointX(lua_State* l) {
 		return error;
 	}
 
-	lua_pushnumber(l, GetFramePointX((UINT)lua_tointeger(l, 1), (EFramePoint)lua_tointeger(l, 2)));
+	lua_pushnumber(l, GetFramePointX((UINT)lua_touserdata(l, 1), (EFramePoint)lua_tointeger(l, 2)));
 
 	return 1;
 }
@@ -393,13 +812,13 @@ int lua_GetFramePointY(lua_State* l) {
 		return error;
 	}
 
-	lua_pushnumber(l, GetFramePointY((UINT)lua_tointeger(l, 1), (EFramePoint)lua_tointeger(l, 2)));
+	lua_pushnumber(l, GetFramePointY((UINT)lua_touserdata(l, 1), (EFramePoint)lua_tointeger(l, 2)));
 
 	return 1;
 }
 
 int lua_GetTriggerFrame(lua_State* l) {
-	lua_pushinteger(l, GetTriggerFrame());
+	lua_pushlightuserdata(l, (PVOID)GetTriggerFrame());
 
 	return 1;
 }
@@ -410,7 +829,7 @@ int lua_GetFrameValue(lua_State* l) {
 		return error;
 	}
 
-	lua_pushnumber(l, GetFrameValue((UINT)lua_tointeger(l, 1)));
+	lua_pushnumber(l, GetFrameValue((UINT)lua_touserdata(l, 1)));
 
 	return 1;
 }
@@ -427,7 +846,7 @@ int lua_SetFrameValue(lua_State* l) {
 		return error;
 	}
 
-	SetFrameValue((UINT)lua_tointeger(l, 1), (float)lua_tonumber(l, 2));
+	SetFrameValue((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
 
 	return 0;
 }
@@ -438,7 +857,7 @@ int lua_SetFrameMinMaxValue(lua_State* l) {
 		return error;
 	}
 
-	SetFrameMinMaxValue((UINT)lua_tointeger(l, 1), (float)lua_tonumber(l, 2), (float)lua_tonumber(l, 3));
+	SetFrameMinMaxValue((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2), (float)lua_tonumber(l, 3));
 
 	return 0;
 }
@@ -449,7 +868,7 @@ int lua_SetFrameStepSize(lua_State* l) {
 		return error;
 	}
 
-	SetFrameStepSize((UINT)lua_tointeger(l, 1), (float)lua_tonumber(l, 2));
+	SetFrameStepSize((UINT)lua_touserdata(l, 1), (float)lua_tonumber(l, 2));
 
 	return 0;
 }
@@ -460,7 +879,7 @@ int lua_SetFrameTexture(lua_State* l) {
 		return error;
 	}
 
-	SetFrameTexture((UINT)lua_tointeger(l, 1), lua_tostring(l, 2), lua_toboolean(l, 3));
+	SetFrameTexture((UINT)lua_touserdata(l, 1), cp1251_to_utf8(lua_tostring(l, 2)).c_str(), lua_toboolean(l, 3));
 
 	return 0;
 }
@@ -471,7 +890,7 @@ int lua_SetFrameEnable(lua_State* l) {
 		return error;
 	}
 
-	SetFrameEnable((UINT)lua_tointeger(l, 1), lua_toboolean(l, 2));
+	SetFrameEnable((UINT)lua_touserdata(l, 1), lua_toboolean(l, 2));
 
 	return 0;
 }
@@ -482,7 +901,7 @@ int lua_ClickFrame(lua_State* l) {
 		return error;
 	}
 
-	ClickFrame((UINT)lua_tointeger(l, 1));
+	ClickFrame((UINT)lua_touserdata(l, 1));
 
 	return 0;
 }
@@ -493,7 +912,7 @@ int lua_SetFrameModel(lua_State* l) {
 		return error;
 	}
 
-	SetFrameModel((UINT)lua_tointeger(l, 1), lua_tostring(l, 2), (UINT)lua_tointeger(l, 3), (BOOL)lua_toboolean(l, 4));
+	SetFrameModel((UINT)lua_touserdata(l, 1), cp1251_to_utf8(lua_tostring(l, 2)).c_str(), (UINT)lua_tointeger(l, 3), (BOOL)lua_toboolean(l, 4));
 
 	return 0;
 }
@@ -504,7 +923,7 @@ int lua_DestroyFrame(lua_State* l) {
 		return error;
 	}
 
-	DestroyFrame((UINT)lua_tointeger(l, 1));
+	DestroyFrame((UINT)lua_touserdata(l, 1));
 
 	return 0;
 }
@@ -515,7 +934,7 @@ int lua_SetFrameVisible(lua_State* l) {
 		return error;
 	}
 
-	SetFrameVisible((UINT)lua_tointeger(l, 1), (BOOL)lua_toboolean(l, 2));
+	SetFrameVisible((UINT)lua_touserdata(l, 1), (BOOL)lua_toboolean(l, 2));
 
 	return 0;
 }
@@ -537,12 +956,54 @@ int lua_SetFrameCheck(lua_State* l) {
 		return error;
 	}
 
-	SetFrameCheck((UINT)lua_tointeger(l, 1), (BOOL)lua_toboolean(l, 2));
+	SetFrameCheck((UINT)lua_touserdata(l, 1), (BOOL)lua_toboolean(l, 2));
 
 	return 0;
 }
 
 //--------------------------------------------------------
+
+int GetTrigger(lua_State* l) {
+	lua_pushlightuserdata(l, (PVOID)GetTimerByHandle((UINT)lua_touserdata(l, 1)));
+
+	return 1;
+}
+
+void lua_openMemHackAPI(lua_State* l) {
+	lua_registerex(l, "GetUnitArmor", 1, lua_GetUnitArmor);
+	lua_registerex(l, "SetUnitArmor", 2, lua_SetUnitArmor);
+	lua_registerex(l, "GetUnitMaxLife", 1, lua_GetUnitMaxLife);
+	lua_registerex(l, "SetUnitMaxLife", 2, lua_SetUnitMaxLife);
+	lua_registerex(l, "GetUnitMaxMana", 1, lua_GetUnitMaxMana);
+	lua_registerex(l, "SetUnitMaxMana", 2, lua_SetUnitMaxMana);
+	lua_registerex(l, "GetUnitLifeRegen", 1, lua_GetUnitLifeRegen);
+	lua_registerex(l, "SetUnitLifeRegen", 2, lua_SetUnitLifeRegen);
+	lua_registerex(l, "GetUnitManaRegen", 1, lua_GetUnitManaRegen);
+	lua_registerex(l, "SetUnitManaRegen", 2, lua_SetUnitManaRegen);
+	lua_registerex(l, "GetUnitBaseDamage", 1, lua_GetUnitBaseDamage);
+	lua_registerex(l, "SetUnitBaseDamage", 2, lua_SetUnitBaseDamage);
+	lua_registerex(l, "GetUnitAttackSpeed", 1, lua_GetUnitAttackSpeed);
+	lua_registerex(l, "SetUnitAttackSpeed", 2, lua_SetUnitAttackSpeed);
+	lua_registerex(l, "UnitResetAttackCooldown", 1, lua_UnitResetAttackCooldown);
+	lua_registerex(l, "GetItemBaseNameById", 1, lua_GetItemBaseNameById);
+	lua_registerex(l, "SetItemBaseNameById", 2, lua_SetItemBaseNameById);
+	lua_registerex(l, "GetItemBaseUbertipById", 1, lua_GetItemBaseUbertipById);
+	lua_registerex(l, "SetItemBaseUbertipById", 2, lua_SetItemBaseUbertipById);
+	lua_registerex(l, "GetItemBaseIconPathById", 1, lua_GetItemBaseIconPathById);
+	lua_registerex(l, "SetItemBaseIconPathById", 2, lua_SetItemBaseIconPathById);
+	lua_registerex(l, "GetMouseWorldPos", 0, lua_GetMouseWorldPos);
+	lua_registerex(l, "GetMouseWorldX", 0, lua_GetMouseWorldX);
+	lua_registerex(l, "GetMouseWorldY", 0, lua_GetMouseWorldY);
+	lua_registerex(l, "GetMouseWorldZ", 0, lua_GetMouseWorldZ);
+	lua_registerex(l, "GetEffectPos", 1, lua_GetEffectPos);
+	lua_registerex(l, "GetEffectX", 1, lua_GetEffectX);
+	lua_registerex(l, "GetEffectY", 1, lua_GetEffectY);
+	lua_registerex(l, "GetEffectZ", 1, lua_GetEffectZ);
+	lua_registerex(l, "SetEffectPos", 2, lua_SetEffectPos);
+	lua_registerex(l, "SetEffectX", 2, lua_SetEffectX);
+	lua_registerex(l, "SetEffectY", 2, lua_SetEffectY);
+	lua_registerex(l, "SetEffectZ", 2, lua_SetEffectZ);
+}
 
 void lua_openFrameAPI(lua_State* l) {
 	lua_setint(l, "ORIGIN_FRAME_GAME_UI", ORIGIN_FRAME_GAME_UI);

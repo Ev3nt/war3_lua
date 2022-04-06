@@ -36,11 +36,7 @@ BOOL __fastcall isFrameHasEventObserver(UINT frame, UINT, UINT eventcode) {
 
 BOOL __fastcall frameEventCallback(UINT frame, UINT, DWORD eventaddress) {
 	UINT eventtype = *(UINT*)(eventaddress + 8);
-	BOOL result = -1;
-
-	if (running) {
-		result = eventCallback(frame, eventtype, eventaddress);
-	}
+	BOOL result = eventCallback(frame, eventtype, eventaddress);
 
 	return result == -1 ? reinterpret_cast<BOOL(__fastcall*)(UINT, UINT, UINT, DWORD)>(*(DWORD*)(*(DWORD*)frame + 0x14))(frame, NULL, eventtype, eventaddress) : result;
 }

@@ -9823,7 +9823,7 @@ function InitBlizzardGlobals()
 	end
 	
 	bj_FORCE_ALL_PLAYERS = CreateForce()
-	ForceEnumPlayers(bj_FORCE_ALL_PLAYERS, nil)
+	ForceEnumPlayers(bj_FORCE_ALL_PLAYERS, 0)
 	
 	--  Init Cinematic Mode history
 	bj_cineModePriorSpeed       = GetGameSpeed()
@@ -10046,7 +10046,7 @@ function InitNeutralBuildings()
 	
 	--  Set up a trigger to fire whenever an item is sold.
 	bj_stockItemPurchased = CreateTrigger()
-	TriggerRegisterPlayerUnitEvent(bj_stockItemPurchased, Player(PLAYER_NEUTRAL_PASSIVE), EVENT_PLAYER_UNIT_SELL_ITEM, nil)
+	TriggerRegisterPlayerUnitEvent(bj_stockItemPurchased, Player(PLAYER_NEUTRAL_PASSIVE), EVENT_PLAYER_UNIT_SELL_ITEM, 0)
 	TriggerAddAction(bj_stockItemPurchased, RemovePurchasedItem)
 end
 -- ===========================================================================

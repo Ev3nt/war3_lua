@@ -4,12 +4,12 @@
 #include "JassMachine.h"
 #include "JassNatives.h"
 #include "GameUI.h"
+#include "MemHack.h"
 #include "Utils.h"
 #include "Global.h"
 #include <Storm.h>
 
 lua_State* mainState;
-bool running = false;
 
 void lua_throwerr(lua_State* l);
 
@@ -26,7 +26,9 @@ lua_State* getMainState() {
 			lua_disableFunctions(l);
 			lua_replaceFileStreamFunctions(l);
 		}
+		lua_replaceGlobals(l);
 		lua_openJassNatives(l);
+		lua_openMemHackAPI(l);
 		lua_openFrameAPI(l);
 		// lua_open_warcraftfunctions(l);
 		lua_replaceSearchers(l);
@@ -40,10 +42,10 @@ void destroyMainState()
 	if (mainState) {
 		lua_close(mainState);
 		mainState = NULL;
-		running = false;
 
 		JassNatives_reset();
 		GameUI_reset();
+		MemHack_reset();
 	}
 
 	clearConsole();
@@ -61,12 +63,9 @@ BOOL startLua() {
 	if (SFileOpenFileEx(*pMapMpq, "war3map.lua", NULL, &war3luaScript)) {
 		SFileCloseFile(war3luaScript);
 
-		running = true;
-
-		lua_pushcfunction(l, stacktrace);
 		lua_getglobal(l, "require");
 		lua_pushstring(l, "war3map");
-		if (!(result = !lua_pcall(l, 1, LUA_MULTRET, -3))) {
+		if (!(result = !lua_pcall(l, 1, LUA_MULTRET, NULL))) {
 			lua_throwerr(l);
 		}
 
@@ -77,24 +76,28 @@ BOOL startLua() {
 }
 
 BOOL __stdcall startLuaThread(DWORD esi) {
-	if (!running) {
-		return FALSE;
-	}
-
 	PJASS_STACK stack = *(PJASS_STACK*)(esi + 0x2868);
 
 	lua_State* l = (lua_State*)stack->pop()->value;
 	getFunctionByRef(l, stack->pop()->value);
+	UINT objectHandle = stack->pop()->value;
 	lua_State* thread = getThreadState(l, -1);
 	lua_xmove(l, thread, 1);
 
 	int res;
-	switch (lua_resume(thread, l, 0, &res)) {
+	//lua_pushcfunction(l, stacktrace);
+	switch (lua_resume(thread, l, 0, &res)) { /*lua_resume(thread, l, 0, &res) */
 	case LUA_OK:
 		((PJASS_DATA_SLOT)(esi + 80))->set(lua_toboolean(thread, 1), OPCODE_VARIABLE_BOOLEAN);
 
 		break;
 	case LUA_ERRRUN:
+		UINT object = GetTriggerByHandle(objectHandle) | GetTimerByHandle(objectHandle) | GetGroupByHandle(objectHandle);
+
+		if (object) {
+			((UINT(__fastcall*)(UINT))(*(UINT*)(*(UINT*)object + 0x5c)))(object);
+		}
+
 		lua_throwerr(thread);
 
 		return FALSE;
@@ -106,15 +109,15 @@ BOOL __stdcall startLuaThread(DWORD esi) {
 //----------------------------------------------------------
 
 void lua_throwerr(lua_State* l) {
+	luaL_traceback(l, l, lua_tostring(l, -1), 0);
 	LPCSTR error = lua_tostring(l, -1);
-	running = false;
+	lua_pop(l, 1);
 
-	printf("--------------------Lua Error--------------------\n%s\n-------------------------------------------------\n\n", error);
-	MessageBox(NULL, error, "Lua Error", MB_ICONHAND | MB_TOPMOST);
+	printf("\n%s--------------------Lua Error--------------------%s\n%s\n%s-------------------------------------------------%s\n\n", ANSI_COLOR_RED, ANSI_COLOR_RESET, error, ANSI_COLOR_RED, ANSI_COLOR_RESET);
+	printfChat(100, "\n|cFFFF0000--------------------Lua Error--------------------|r\n%s\n|cFFFF0000------------------------------------------------------------|r\n\n", error);
 }
 
-int stacktrace(lua_State* L)
-{
+int stacktrace(lua_State* L) {
 	luaL_traceback(L, L, lua_tostring(L, -1), 0);
 
 	return 1;

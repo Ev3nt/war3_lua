@@ -3,8 +3,6 @@
 #include <Windows.h>
 #include <lua.hpp>
 
-extern bool running;
-
 BOOL startLua();
 
 BOOL __stdcall startLuaThread(DWORD esi);
