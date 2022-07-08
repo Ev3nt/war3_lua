@@ -1,166 +1,146 @@
+#include "pch.h"
 #include "JassNatives.h"
-#include "JassMachine.h"
 #include "LuaMachine.h"
-#include "Global.h"
+#include "JassMachine.h"
 
-std::unordered_map<LPCSTR, JASSNATIVE> jassnatives;
-std::unordered_map<DWORD, JASS_OPLIST> triggers;
+namespace Jass {
+	std::unordered_map<std::string, JASSNATIVE> jassnatives;
+	std::unordered_map<DWORD, JassMachine::JASS_OPLIST> jassopcodes;
 
-#pragma pack(push)
-#pragma pack(1)
-struct asm_opcode_5 {
-	BYTE opcode;
-	DWORD value;
-};
-#pragma pack(pop)
+	//---------------------------------------------------------
 
-struct asm_register_native_function {
-private:
-	asm_opcode_5 push;
-	asm_opcode_5 mov_edx;
-	asm_opcode_5 mov_ecx;
-	asm_opcode_5 call;
-public:
-	bool verify() {
-		return ((push.opcode == 0x68) && (mov_edx.opcode == 0xBA) && (mov_ecx.opcode == 0xB9) && (call.opcode == 0xE8));
+	UINT ToCode(lua_State* l, int index) {
+		DWORD key = (DWORD)lua_topointer(l, index);
+		
+		auto it = jassopcodes.find(key);
+
+		if (it != jassopcodes.end()) {
+			return it->second.GetCode();
+		}
+
+		JassMachine::JASS_OPLIST& oplist = jassopcodes[key];
+
+		BYTE reg = 0xD8;
+		oplist.AddOperation(JassMachine::OPTYPE_MOVRLITERAL, reg, LuaMachine::PushFunctionRef(l, index), JassMachine::OPCODE_VARIABLE_INTEGER);
+		oplist.AddOperation(JassMachine::OPTYPE_PUSH, reg);
+		oplist.AddOperation(JassMachine::OPTYPE_STARTLUATHREAD);
+		oplist.AddOperation(JassMachine::OPTYPE_MOVRR);
+		oplist.AddOperation(JassMachine::OPTYPE_RETURN);
+
+		return oplist.GetCode();
 	}
 
-	PCSTR get_params() {
-		return (PCSTR)(push.value);
+	//---------------------------------------------------------
+
+	JASSNATIVE::JASSNATIVE(LPVOID address, std::string params) : m_address(address) {
+		for (size_t i = 1; i < params.size(); i++) {
+			if (params[i] == ')') {
+				break;
+			}
+
+			size_t beg = i++;
+			for (; i < params.size() && !isupper(params[i]) && params[i] != ')'; i++);
+
+			std::string type = params.substr(beg, i-- - beg);
+			if (type[0] == 'H') {
+				type = type.substr(1, type.size() - 2);
+
+				LuaMachine::handlemetatypes[type] = true;
+			}
+
+			m_params.push_back(type);
+		}
+
+		if (size_t beg = params.find(')') + 1) {
+			std::string type = params.substr(beg);
+			if (type[0] == 'H') {
+				type = type.substr(1, type.size() - 2);
+
+				LuaMachine::handlemetatypes[type] = true;
+			}
+
+			m_returntype = type;
+		}
 	}
 
-	PCSTR get_name() {
-		return (PCSTR)(mov_edx.value);
+	JASSNATIVE::JASSNATIVE() : m_address(NULL) {}
+
+	bool JASSNATIVE::IsValid() {
+		return m_address && !m_returntype.empty();
 	}
 
-	PVOID get_address() {
-		return (PVOID)(mov_ecx.value);
-	}
-};
-
-UINT GetGroupByHandle(UINT handle) {
-	return ((UINT(__fastcall*)(UINT))((UINT_PTR)gameBase + 0x3bea30))(handle);
-}
-
-UINT GetTriggerByHandle(UINT handle) {
-	return ((UINT(__fastcall*)(UINT))((UINT_PTR)gameBase + 0x3bdef0))(handle);
-}
-
-UINT GetTimerByHandle(UINT handle) {
-	return ((UINT(__fastcall*)(UINT))((UINT_PTR)gameBase + 0x3bd710))(handle);
-}
-
-//---------------------------------------------------------
-
-UINT to_code(lua_State* l, int index, UINT objectHandle) {
-	DWORD key = (DWORD)lua_topointer(l, index);
-
-	auto it = triggers.find(key);
-
-	if (it != triggers.end()) {
-		return it->second.getcode();
+	const std::vector<std::string>& JASSNATIVE::GetParams() {
+		return m_params;
 	}
 
-	JASS_OPLIST& oplist = triggers[key];
+	const std::string& JASSNATIVE::GetReturnType() {
+		return m_returntype;
+	}
 
-	BYTE reg = 0xD8;
-	oplist.addop(OPTYPE_MOVRLITERAL, reg, objectHandle, OPCODE_VARIABLE_INTEGER);
-	oplist.addop(OPTYPE_PUSH, reg);
-	oplist.addop(OPTYPE_MOVRLITERAL, reg, pushFunctionRef(l, index), OPCODE_VARIABLE_INTEGER);
-	oplist.addop(OPTYPE_PUSH, reg);
-	oplist.addop(OPTYPE_MOVRLITERAL, reg, (DWORD)l, OPCODE_VARIABLE_INTEGER);
-	oplist.addop(OPTYPE_PUSH, reg);
-	oplist.addop(OPTYPE_STARTLUATHREAD);
-	oplist.addop(OPTYPE_MOVRR);
-	oplist.addop(OPTYPE_RETURN);
+	PVOID JASSNATIVE::GetAddress() {
+		return m_address;
+	}
 
-	return oplist.getcode();
-}
+	DWORD JASSNATIVE::Invoke(LPVOID params, size_t size) {
+		if (!params && size) {
+			return NULL;
+		}
 
-//---------------------------------------------------------
+		PVOID function_address = m_address;
+		size_t params_size = size * sizeof UINT;
+		LPVOID esp_ptr;
 
-JASSNATIVE::JASSNATIVE(LPVOID address, LPCSTR params) : _address(address) {
-	LPCSTR it = params++;
+		DWORD result;
 
-	for (; *it; it++) {
-		if (*it != ')') {
-			if (isupper(*it)) {
-				_params.push_back((JASS_TYPE)*it);
+		_asm {
+			sub esp, params_size
+			mov esp_ptr, esp
+		}
+
+		if (size) {
+			CopyMemory(esp_ptr, params, params_size);
+		}
+
+		_asm {
+			call [function_address]
+			mov result, eax
+
+			mov esp, esp_ptr
+			add esp, params_size
+		}
+
+		return result;
+	}
+
+	//---------------------------------------------------------
+
+	JASSNATIVE& GetNative(std::string name) {
+		for (auto& native : jassnatives) {
+			if (native.first == name) {
+				return native.second;
 			}
 		}
-		else {
-			break;
+
+		JASSNATIVE nothing;
+
+		return nothing;
+	}
+
+	void JassNativesParse() {
+		size_t size = 0;
+		JassMachine::PJASS_THREAD_LOCAL jassThreadLocal = JassMachine::GetJassThreadLocal();
+		for (auto native = jassThreadLocal->firstNative; native < jassThreadLocal->lastNative; native = native->next) {
+			//printf("%s %s = %d\n", native->name, native->arguments, ++size);
+			jassnatives[native->name] = JASSNATIVE(native->callback, native->arguments);
 		}
+
 	}
 
-	_rettype = (JASS_TYPE)*(++it);
-}
-
-JASSNATIVE::JASSNATIVE() : _address(NULL), _rettype(TYPE_NONE) {}
-
-bool JASSNATIVE::is_valid() {
-	return _rettype != TYPE_NONE;
-}
-
-const std::vector<JASS_TYPE>& JASSNATIVE::get_params() {
-	return _params;
-}
-
-const JASS_TYPE& JASSNATIVE::get_rettype() {
-	return _rettype;
-}
-
-PVOID JASSNATIVE::get_address() {
-	return _address;
-}
-
-BOOL JASSNATIVE::call(LPVOID params, size_t size) {
-	PVOID function_address = _address;
-	size_t params_size = size * sizeof UINT;
-	LPVOID esp_ptr;
-
-	BOOL result;
-
-	_asm {
-		sub esp, params_size
-		mov esp_ptr, esp
+	void JassNativesReset() {
+		std::unordered_map<std::string, JASSNATIVE>().swap(jassnatives);
 	}
 
-	memcpy(esp_ptr, params, params_size);
-
-	_asm {
-		call [function_address]
-		mov result, eax
-
-		mov esp, esp_ptr
-		add esp, params_size
+	void JassOpcodesReset() {
+		jassopcodes.clear();
 	}
-
-	return result;
-}
-
-//---------------------------------------------------------
-
-JASSNATIVE invalid;
-
-JASSNATIVE& get_native(LPCSTR name) {
-	for (auto& native : jassnatives) {
-		if (!strcmp(native.first, name)) {
-			return native.second;
-		}
-	}
-
-	return invalid;
-}
-
-auto jassNativesList = (asm_register_native_function*)((UINT_PTR)gameBase + 0x3d4025);
-
-void jassNativesParse() {
-	for (asm_register_native_function* ptr = jassNativesList; ptr->verify(); ptr++) {
-		jassnatives[ptr->get_name()] = JASSNATIVE(ptr->get_address(), ptr->get_params());
-	}
-}
-
-void JassNatives_reset() {
-	triggers.clear();
 }

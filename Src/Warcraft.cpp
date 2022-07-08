@@ -1,20 +1,31 @@
+#include "pch.h"
 #include "Warcraft.h"
-#include "Global.h"
+#include "fp_call.h"
 
-auto getInstanceTrue = (HANDLE(__fastcall*)(UINT))((UINT_PTR)gameBase + 0x4c34d0);
+auto GetInstanceTrue = (HANDLE(__fastcall*)(UINT))((std::ptrdiff_t)gameBase + 0x4c34d0);
+UINT pGameState = (std::ptrdiff_t)gameBase + 0xab65f4;
+UINT pGameClass2 = (std::ptrdiff_t)gameBase + 0xab4f80;
 
-PJASS_INSTANCE getJassMachine(UINT index) {
-	UINT_PTR jass_thread = *(UINT_PTR*)(*(UINT_PTR*)((UINT_PTR)getInstance(5) + 0x90) + index * 4);
-
-	return jass_thread ? (PJASS_INSTANCE)jass_thread : NULL;
+void PrintChat(LPCSTR text, float duration) {
+	fast_call<void>((std::ptrdiff_t)gameBase + 0x2f8e40, *(UINT*)pGameClass2, NULL, 0, 0, text, *(UINT*)&duration, 0xFFFFFFFF);
+	//((void(__fastcall*)(UINT, UINT, UINT, UINT, LPCSTR, UINT, UINT))((UINT)gameBase + 0x2f8e40))(*(UINT*)pGameClass2, NULL, 0, 0, text, *(UINT*)&duration, 0xFFFFFFFF);
 }
 
-PJASS_INSTANCE getJassInstance() {
-	HANDLE instance = getInstance(5);
+void PrintfChat(float duration, LPCSTR format, ...) {
+	char text[8192] = { NULL };
 
-	return *(UINT_PTR*)((UINT_PTR)instance + 0x14) ? *(PJASS_INSTANCE*)(*(UINT_PTR*)((UINT_PTR)instance + 0xc) + *(UINT_PTR*)((UINT_PTR)instance + 0x14) * 4 - 4) : NULL;
+	va_list args;
+	va_start(args, format);
+	vsprintf_s(text, format, args);
+	va_end(args);
+
+	PrintChat(text, duration);
 }
 
-HANDLE getInstance(UINT index) {
-	return getInstanceTrue(index);
+HANDLE GetInstance(UINT index) {
+	return GetInstanceTrue(index);
+}
+
+LPVOID ConvertHandle(UINT handle) {
+	return handle ? *(LPVOID*)(*(UINT*)(*(UINT*)(*(UINT*)pGameState + 0x1c) + 0x19c) + handle * 0xc - 0x2fffff * 4) : NULL;
 }

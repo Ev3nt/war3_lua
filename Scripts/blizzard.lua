@@ -9823,7 +9823,7 @@ function InitBlizzardGlobals()
 	end
 	
 	bj_FORCE_ALL_PLAYERS = CreateForce()
-	ForceEnumPlayers(bj_FORCE_ALL_PLAYERS, 0)
+	ForceEnumPlayers(bj_FORCE_ALL_PLAYERS, nil)
 	
 	--  Init Cinematic Mode history
 	bj_cineModePriorSpeed       = GetGameSpeed()
@@ -9897,17 +9897,17 @@ function InitSummonableCaps()
 		--  upgraded units
 		--  Note: Only do this if the corresponding upgrade is not yet researched
 		--  Barrage - Siege Engines
-		if (not GetPlayerTechResearched(Player(index), 'Rhrt', true)) then
-			SetPlayerTechMaxAllowed(Player(index), 'hrtt', 0)
+		if (not GetPlayerTechResearched(Player(index), StringToId('Rhrt'), true)) then
+			SetPlayerTechMaxAllowed(Player(index), StringToId('hrtt'), 0)
 		end
 		
 		--  Berserker Upgrade - Troll Berserkers
-		if (not GetPlayerTechResearched(Player(index), 'Robk', true)) then
-			SetPlayerTechMaxAllowed(Player(index), 'otbk', 0)
+		if (not GetPlayerTechResearched(Player(index), StringToId('Robk'), true)) then
+			SetPlayerTechMaxAllowed(Player(index), StringToId('otbk'), 0)
 		end
 		
 		--  max skeletons per player
-		SetPlayerTechMaxAllowed(Player(index), 'uske', bj_MAX_SKELETONS)
+		SetPlayerTechMaxAllowed(Player(index), StringToId('uske'), bj_MAX_SKELETONS)
 		
 		index = index + 1
 		if index == bj_MAX_PLAYERS then break end
@@ -10046,7 +10046,7 @@ function InitNeutralBuildings()
 	
 	--  Set up a trigger to fire whenever an item is sold.
 	bj_stockItemPurchased = CreateTrigger()
-	TriggerRegisterPlayerUnitEvent(bj_stockItemPurchased, Player(PLAYER_NEUTRAL_PASSIVE), EVENT_PLAYER_UNIT_SELL_ITEM, 0)
+	TriggerRegisterPlayerUnitEvent(bj_stockItemPurchased, Player(PLAYER_NEUTRAL_PASSIVE), EVENT_PLAYER_UNIT_SELL_ITEM, nil)
 	TriggerAddAction(bj_stockItemPurchased, RemovePurchasedItem)
 end
 -- ===========================================================================
@@ -10217,37 +10217,6 @@ end
 -- *  Just wrap for functions
 -- 
 -- ***************************************************************************
-
--- function GetEffectPos(effect)
--- 	return GetObjectPos(effect)
--- end
-
--- function GetEffectX(effect)
--- 	return GetObjectX(effect)
--- end
-
--- function GetEffectY(effect)
--- 	return GetObjectY(effect)
--- end
-
--- function GetEffectZ(effect)
--- 	return GetObjectZ(effect)
--- end
-
--- function SetEffectPos(effect, x, y, z)
--- 	SetObjectPos(effect, x, y, z)
--- end
-
--- function SetEffectX(effect, x)
--- 	SetObjectX(effect, x)
--- end
-
--- function SetEffectY(effect, y)
--- 	SetObjectY(effect, y)
--- end
--- function SetEffectZ(effect, z)
--- 	SetObjectZ(effect, z)
--- end
 
 function _print(...)
 	local string = ""

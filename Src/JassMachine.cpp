@@ -1,34 +1,51 @@
+#include "pch.h"
 #include "JassMachine.h"
 #include "LuaMachine.h"
-#include "Global.h"
+#include "fp_call.h"
 
-PVOID** ppOpcodeList = (PVOID**)((UINT_PTR)gameBase + 0x45ea5a);
-BYTE* pOpcodeListSize = (BYTE*)((UINT_PTR)gameBase + 0x45ea4d);
-PVOID opcodeDefaultOut = (PVOID)((UINT_PTR)gameBase + 0x45f79a);
+namespace JassMachine {
+	PVOID** ppOpcodeList = (PVOID**)((std::ptrdiff_t)gameBase + 0x45ea5a);
+	BYTE* pOpcodeListSize = (BYTE*)((std::ptrdiff_t)gameBase + 0x45ea4d);
+	PVOID opcodeDefaultOutput = (PVOID)((std::ptrdiff_t)gameBase + 0x45f79a);
 
-PVOID OPCODE_FUNCTIONS[44];
+	PVOID OPCODE_FUNCTIONS[44];
 
-DWORD _declspec(naked) opcodeStartLuaThread() {
-	_asm {
-		push esi
-		call startLuaThread
+	DWORD OpcodeStartLuaThread() {
+		LuaMachine::StartLuaThread();
 
-		push opcodeDefaultOut
-		ret
+		return c_call<int>(JassMachine::opcodeDefaultOutput);
 	}
-}
 
-void jassOpcodeInitialize() {
-	 memcpy(OPCODE_FUNCTIONS, *ppOpcodeList, sizeof(OPCODE_FUNCTIONS));
+	void JassOpcodeInitialize() {
+		CopyMemory(OPCODE_FUNCTIONS, *ppOpcodeList, sizeof(OPCODE_FUNCTIONS));
 
-	 OPCODE_FUNCTIONS[OPTYPE_STARTLUATHREAD - 2] = opcodeStartLuaThread; // My own opcode function
+		OPCODE_FUNCTIONS[OPTYPE_STARTLUATHREAD - 2] = OpcodeStartLuaThread; // My own opcode function
 
-	 DWORD dwOldProtect;
-	 VirtualProtect(pOpcodeListSize, 1, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-	 *pOpcodeListSize = sizeof(OPCODE_FUNCTIONS) / 4 - 1;
-	 VirtualProtect(pOpcodeListSize, 1, dwOldProtect, &dwOldProtect);
+		DWORD dwOldProtect;
+		VirtualProtect(pOpcodeListSize, sizeof(BYTE), PAGE_EXECUTE_READWRITE, &dwOldProtect);
+		*pOpcodeListSize = sizeof(OPCODE_FUNCTIONS) / sizeof(PVOID) - 1;
+		VirtualProtect(pOpcodeListSize, sizeof(BYTE), dwOldProtect, &dwOldProtect);
 
-	 VirtualProtect(ppOpcodeList, 4, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-	 *ppOpcodeList = OPCODE_FUNCTIONS;
-	 VirtualProtect(ppOpcodeList, 4, dwOldProtect, &dwOldProtect);
+		VirtualProtect(ppOpcodeList, sizeof(PVOID), PAGE_EXECUTE_READWRITE, &dwOldProtect);
+		*ppOpcodeList = OPCODE_FUNCTIONS;
+		VirtualProtect(ppOpcodeList, sizeof(PVOID), dwOldProtect, &dwOldProtect);
+	}
+
+	//-----------------------------------------------------------
+
+	PJASS_THREAD_LOCAL GetJassThreadLocal() {
+		return (PJASS_THREAD_LOCAL)GetInstance(5);
+	}
+
+	PJASS_INSTANCE GetJassMachine(UINT index) {
+		std::ptrdiff_t jass_thread = *(std::ptrdiff_t*)(*(UINT*)((std::ptrdiff_t)GetJassThreadLocal() + 0x90) + index * 4);
+
+		return jass_thread ? (PJASS_INSTANCE)jass_thread : NULL;
+	}
+
+	PJASS_INSTANCE GetJassInstance() {
+		HANDLE instance = GetJassThreadLocal();
+
+		return *(std::ptrdiff_t*)((std::ptrdiff_t)instance + 0x14) ? *(PJASS_INSTANCE*)(*(std::ptrdiff_t*)((std::ptrdiff_t)instance + 0xc) + *(UINT*)((std::ptrdiff_t)instance + 0x14) * 4 - 4) : NULL;
+	}
 }

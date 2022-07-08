@@ -1,19 +1,17 @@
-#include <Windows.h>
-#include <iostream>
-#include <detours.h>
-#include "Global.h"
-#include "lua.h"
-#include "JassNatives.h"
+#include "pch.h"
 #include "JassMachine.h"
+#include "JassNatives.h"
 #include "Hooks.h"
-#include "Utils.h"
+#include "Logger.h"
+#include "EasterEgg.h"
 
-bool consoleMode = false;
 bool developerMode = false;
+SYSTEMTIME date;
+std::string celebratingText;
 
-bool startUp();
+bool StartUp();
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------
 
 BOOL APIENTRY DllMain(HMODULE module, UINT reason, LPVOID reserved) {
 	switch (reason) {
@@ -21,26 +19,25 @@ BOOL APIENTRY DllMain(HMODULE module, UINT reason, LPVOID reserved) {
 		if (!gameBase) {
 			return FALSE;
 		}
-		
-		DisableThreadLibraryCalls(module);
 
-		if (!startUp()) {
+		if (!StartUp()) {
 			return FALSE;
 		}
 
-		if (consoleMode) {
-			system("cls");
-		}
-		printf("%s\n%s (%s)\n", LUA_COPYRIGHT, WAR3_LUA, WAR3_LUA_VERSION_NAME);
+		GetLocalTime(&date);
+		celebratingText = GetEasterText(date);
+		!celebratingText.empty() ? MessageBox(NULL, celebratingText.c_str(), "Celebration Message!", MB_ICONINFORMATION) : NULL;
 
-		jassNativesParse();
-		jassOpcodeInitialize();
+		JassMachine::JassOpcodeInitialize();
 
-		attachHooks();
+		Hooks::AttachHooks();
 
 		break;
 	case DLL_PROCESS_DETACH:
-		detachHooks();
+
+		Hooks::DetachHooks();
+
+		Logger::CloseConsole();
 
 		break;
 	}
@@ -48,9 +45,9 @@ BOOL APIENTRY DllMain(HMODULE module, UINT reason, LPVOID reserved) {
 	return TRUE;
 }
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------
 
-bool startUp() {
+bool StartUp() {
 	DWORD handle;
 	DWORD size = GetFileVersionInfoSize("game.dll", &handle);
 
@@ -78,7 +75,10 @@ bool startUp() {
 	}
 
 	if (strstr(&cmdline[i + 1], "-console") || strstr(&cmdline[i + 1], "-debug")) {
-		consoleMode = openConsole(developerMode ? "Lua Console [Developer]" : "Lua Console") ? true : false;
+		Logger::OpenConsole(developerMode ? "Lua Console [Developer]" : "Lua Console");
+
+		system("cls");
+		printf("%s\n%s (%s)\n\n", LUA_COPYRIGHT, WAR3_LUA, WAR3_LUA_VERSION_NAME);
 	}
 
 	return true;

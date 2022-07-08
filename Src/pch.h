@@ -1,6 +1,17 @@
 #pragma once
 
+#ifndef PCH_H
+#define PCH_H
 #include <Windows.h>
+#include <cstddef>
+#include <detours.h>
+#include <vector>
+#include <unordered_map>
+#include <string>
+#include <lua.hpp>
+#include <iostream>
+#include <map>
+#include "fp_call.h"
 
 #define ANSI_COLOR_RED     "\x1B[31m"
 #define ANSI_COLOR_GREEN   "\x1B[32m"
@@ -12,8 +23,8 @@
 
 #define WAR3_LUA_MAJOR "1"
 #define WAR3_LUA_MINOR "1"
-#define WAR3_LUA_RELEASE "5"
-#define WAR3_LUA_VERSION_NAME  ANSI_COLOR_GREEN "Ashenvale" ANSI_COLOR_RESET " - Experimental"
+#define WAR3_LUA_RELEASE "6"
+#define WAR3_LUA_VERSION_NAME  ANSI_COLOR_YELLOW "Outland" ANSI_COLOR_RESET
 
 #define WAR3_LUA_VERSION WAR3_LUA_MAJOR "." WAR3_LUA_MINOR "." WAR3_LUA_RELEASE
 #define WAR3_LUA "War3 Lua " WAR3_LUA_VERSION
@@ -21,9 +32,9 @@
 #define GAME_ID "W3L"
 
 static HMODULE gameBase = GetModuleHandle("game.dll");
-static HWND gameWindow = FindWindow(NULL, "Warcraft III");
+static HANDLE* pMapMpq = (HANDLE*)((std::ptrdiff_t)gameBase + 0xaae788);
 
-static HANDLE* pMapMpq = (HANDLE*)((UINT_PTR)gameBase + 0xaae788);
-
-extern bool consoleMode;
 extern bool developerMode;
+
+extern SYSTEMTIME date;
+#endif

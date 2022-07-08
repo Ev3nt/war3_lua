@@ -1,22 +1,22 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.0.31912.275
+VisualStudioVersion = 17.1.32421.90
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "war3_lua", "war3_lua.vcxproj", "{9E1903DF-815D-4B82-A6DA-E0D40674769A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "war3_lua", "war3_lua.vcxproj", "{E196008E-BA95-4E1F-9ED5-7CD8F16ED9AF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9E1903DF-815D-4B82-A6DA-E0D40674769A}.Release|x86.ActiveCfg = Release|Win32
-		{9E1903DF-815D-4B82-A6DA-E0D40674769A}.Release|x86.Build.0 = Release|Win32
+		{E196008E-BA95-4E1F-9ED5-7CD8F16ED9AF}.Release|x86.ActiveCfg = Release|Win32
+		{E196008E-BA95-4E1F-9ED5-7CD8F16ED9AF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {694AD159-1A6F-454F-892D-0F27114DA170}
+		SolutionGuid = {F77543EF-A5AC-4550-9B6E-1AC4D70B2836}
 	EndGlobalSection
 EndGlobal

@@ -1,6 +1,6 @@
 FALSE                                                     = false
 TRUE                                                      = true
-JASS_MAX_ARRAY_SIZE                                       = 32768
+JASS_MAX_ARRAY_SIZE                                       = 8192
 PLAYER_NEUTRAL_PASSIVE 									  = 15
 PLAYER_NEUTRAL_AGGRESSIVE 								  = 12
 PLAYER_COLOR_RED                                          = ConvertPlayerColor(0)

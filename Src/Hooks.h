@@ -1,7 +1,7 @@
 #pragma once
 
-#include <windows.h>
+namespace Hooks {
+	void AttachHooks();
 
-void attachHooks();
-
-void detachHooks();
+	void DetachHooks();
+}

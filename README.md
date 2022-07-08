@@ -1,10 +1,12 @@
-# War3 Lua - 1.1.5 (<span style="color:green">Ashenvale</span> - Experimental)
+# War3 Lua - 1.1.6 (<span style="color:orange">Outland</span>)
 
 [![build](https://github.com/Ev3nt/war3_lua/actions/workflows/build.yml/badge.svg)](https://github.com/Ev3nt/war3_lua/actions/workflows/build.yml)
 
 War3 Lua is a modification that allows you to run lua scripts at the JASS level. Lua does not replace the original scripting system in the game, but only expands its capabilities.
 
 Some natives doesn't work (thx jass for beautiful VM).
+
+Lua version: **5.4.4**
 
 ![](https://github.com/Ev3nt/war3_lua/blob/master/war3_lua.png)
 
@@ -23,5 +25,5 @@ Some natives doesn't work (thx jass for beautiful VM).
 ### Recommended build parameters
 * Configuration **Release**
 * Windows platform **x86**
-* Platform **10.0.19041.0**
+* Platform **10.0.19041.**0****
 * Build tools **Visual Studio 2015 (v140)**

@@ -1,16 +1,14 @@
 #pragma once
 
-#include <Windows.h>
-#include <lua.hpp>
+namespace LuaMachine {
+	extern std::map<std::string, bool> handlemetatypes;
 
-BOOL startLua();
+	void StartLua();
+	BOOL __stdcall StartLuaThread();
 
-BOOL __stdcall startLuaThread(DWORD esi);
+	void HandleMetatablesReset();
+	BOOL GetGlobalTable(lua_State* l, LPCSTR name, bool weak);
 
-lua_State* getThreadState(lua_State* l, int index);
-
-BOOL getGlobalTable(lua_State* l, LPCSTR name, bool weak);
-
-int pushFunctionRef(lua_State* l, int index);
-
-void getFunctionByRef(lua_State* l, int ref);
+	int PushFunctionRef(lua_State* l, int index);
+	void GetFunctionByRef(lua_State* l, int ref);
+}
