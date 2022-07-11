@@ -50,6 +50,14 @@ namespace LuaHooks {
 		return lua_gettop(l) - 1;
 	}
 
+	int luaL_loadbufferasfile(lua_State* l, LPCSTR buffer, size_t size, std::string name, LPCSTR mode = NULL) {
+		int status = luaL_loadbufferx(l, buffer, size, ("@" + name).c_str(), mode);
+
+		!size ? lua_pop(l, 1), lua_pushfstring(l, "cannot open %s: No such file or directory", name.c_str()) : NULL; // strerror(2)
+
+		return size ? status : LUA_ERRFILE;
+	}
+
 	int lua_dofile(lua_State* l) {
 		std::string scriptName = luaL_optstring(l, 1, NULL);
 		lua_settop(l, 1);
@@ -63,32 +71,62 @@ namespace LuaHooks {
 		}
 
 		std::string script = map[scriptName];
-		if (!script.empty()) {
-			if (luaL_loadbuffer(l, script.c_str(), script.size(), ("@(" + mapPath + "):\\" + scriptName).c_str()) != LUA_OK) {
-				if (developerMode) {
-					lua_pop(l, 1);
+		if (luaL_loadbufferasfile(l, script.c_str(), script.size(), ("(" + mapPath + "):\\" + scriptName)) != LUA_OK) {
+			if (developerMode) {
+				lua_pop(l, 1);
 
-					ifDeveloperMode:
-					if (luaL_loadfile(l, scriptName.c_str()) != LUA_OK) {
-						return lua_error(l);
-					}
-				}
-				else {
+				if (luaL_loadfile(l, scriptName.c_str()) != LUA_OK) {
 					return lua_error(l);
 				}
 			}
-		}
-		else {
-			if (developerMode) {
-				goto ifDeveloperMode;
+			else {
+				return lua_error(l);
 			}
-
-			return luaL_error(l, "cannot open %s: No such file or directory", scriptName.c_str());
 		}
 
 		lua_callk(l, 0, LUA_MULTRET, 0, dofilecont);
 
 		return dofilecont(l, 0, 0);
+	}
+
+	int load_aux(lua_State* l, int status, int envidx) {
+		if (status == LUA_OK) {
+			if (envidx) {
+				lua_pushvalue(l, envidx);
+
+				if (!lua_setupvalue(l, -2, 1)) {
+					lua_pop(l, 1);
+				}
+			}
+
+			return 1;
+		}
+		else {
+			luaL_pushfail(l);
+			lua_insert(l, -2);
+
+			return 2;
+		}
+	}
+
+	int lua_loadfile(lua_State* l) {
+		std::string scriptName = luaL_optstring(l, 1, NULL);
+		LPCSTR mode = luaL_optstring(l, 2, NULL);
+		int env = (!lua_isnone(l, 3) ? 3 : 0);
+
+		Storm::Archive map;
+		std::string mapPath = map.GetArchiveName(scriptName);
+		if (mapPath.empty()) {
+			map.Connect(*pMapMpq);
+			mapPath = map.GetArchiveName();
+			map.Close();
+		}
+
+		std::string script = map[scriptName];
+		int status = luaL_loadbufferasfile(l, script.c_str(), script.size(), ("(" + mapPath + "):\\" + scriptName));
+		status != LUA_OK && developerMode ? lua_pop(l, 1), status = luaL_loadfilex(l, scriptName.c_str(), mode) : NULL;
+
+		return load_aux(l, status, env);
 	}
 
 	//--------------------------------------------------------------
@@ -130,10 +168,11 @@ namespace LuaHooks {
 		searchers.clear();
 
 		lua_register(l, "dofile", lua_dofile);
+		lua_register(l, "loadfile", lua_loadfile);
 	}
 
 	// -------------------------------------------------------------------------------- -
-// Disabled functions
+	// Disabled functions
 
 	void lua_disableFunctions(lua_State* l) {
 		lua_getglobal(l, "os");
