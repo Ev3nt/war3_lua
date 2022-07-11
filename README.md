@@ -1,4 +1,4 @@
-# War3 Lua - 1.1.6 (<span style="color:orange">Outland</span>)
+# War3 Lua - 1.1.7 (<span style="color:orange">Outland</span>)
 
 [![build](https://github.com/Ev3nt/war3_lua/actions/workflows/build.yml/badge.svg)](https://github.com/Ev3nt/war3_lua/actions/workflows/build.yml)
 
@@ -25,5 +25,5 @@ Lua version: **5.4.4**
 ### Recommended build parameters
 * Configuration **Release**
 * Windows platform **x86**
-* Platform **10.0.19041.**0****
+* Platform **10.0.19041.0**
 * Build tools **Visual Studio 2015 (v140)**

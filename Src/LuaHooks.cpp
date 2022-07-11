@@ -20,7 +20,7 @@ namespace LuaHooks {
 	int searcher_Lua(lua_State* l) {
 		Storm::Archive map;
 		std::string scriptName = luaL_checkstring(l, 1);
-		if (!scriptName.compare("war3map")) {
+		if (scriptName == "war3map") {
 			map.Connect(*pMapMpq);
 		}
 
@@ -44,6 +44,51 @@ namespace LuaHooks {
 		lua_pushstring(l, ("no file '" + scriptPath + "'").c_str());
 
 		return 1;
+	}
+
+	int dofilecont(lua_State* l, int d1, lua_KContext d2) {
+		return lua_gettop(l) - 1;
+	}
+
+	int lua_dofile(lua_State* l) {
+		std::string scriptName = luaL_optstring(l, 1, NULL);
+		lua_settop(l, 1);
+
+		Storm::Archive map;
+		std::string mapPath = map.GetArchiveName(scriptName);
+		if (mapPath.empty()) {
+			map.Connect(*pMapMpq);
+			mapPath = map.GetArchiveName();
+			map.Close();
+		}
+
+		std::string script = map[scriptName];
+		if (!script.empty()) {
+			if (luaL_loadbuffer(l, script.c_str(), script.size(), ("@(" + mapPath + "):\\" + scriptName).c_str()) != LUA_OK) {
+				if (developerMode) {
+					lua_pop(l, 1);
+
+					ifDeveloperMode:
+					if (luaL_loadfile(l, scriptName.c_str()) != LUA_OK) {
+						return lua_error(l);
+					}
+				}
+				else {
+					return lua_error(l);
+				}
+			}
+		}
+		else {
+			if (developerMode) {
+				goto ifDeveloperMode;
+			}
+
+			return luaL_error(l, "cannot open %s: No such file or directory", scriptName.c_str());
+		}
+
+		lua_callk(l, 0, LUA_MULTRET, 0, dofilecont);
+
+		return dofilecont(l, 0, 0);
 	}
 
 	//--------------------------------------------------------------
@@ -83,6 +128,8 @@ namespace LuaHooks {
 
 		lua_pop(l, 1);
 		searchers.clear();
+
+		lua_register(l, "dofile", lua_dofile);
 	}
 
 	// -------------------------------------------------------------------------------- -
@@ -110,9 +157,6 @@ namespace LuaHooks {
 		}
 
 		lua_pop(l, 1);
-
-		lua_pushnil(l);
-		lua_setglobal(l, "dofile");
 
 		lua_pushnil(l);
 		lua_setglobal(l, "debug");
