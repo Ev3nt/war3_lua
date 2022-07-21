@@ -20,6 +20,12 @@ namespace LuaHooks {
 	int searcher_Lua(lua_State* l) {
 		Storm::Archive map;
 		std::string scriptName = luaL_checkstring(l, 1);
+
+		size_t it;
+		while ((it = scriptName.find('.')) != std::string::npos) {
+			scriptName.replace(it, 1, "\\");
+		}
+
 		if (scriptName == "war3map") {
 			map.Connect(*pMapMpq);
 		}

@@ -2,6 +2,8 @@
 #include "EasyStormLib.h"
 #include "StormLib.h"
 
+#define SFILE_OPEN_FROM_MPQ 0
+
 namespace Storm {
 	Archive::Archive() {
 		m_handle = NULL;
@@ -51,7 +53,7 @@ namespace Storm {
 		FillMemory(name, sizeof(name), 0);
 
 		HANDLE _handle;
-		if (StormOpenFile(fileName.c_str(), &_handle)) {
+		if (StormOpenFileEx(NULL, fileName.c_str(), SFILE_OPEN_FROM_MPQ, &_handle)) {
 			HANDLE _archive;
 			if (StormGetFileArchive(_handle, &_archive)) {
 				StormGetArchiveName(_archive, name, sizeof(name));
@@ -68,12 +70,7 @@ namespace Storm {
 
 		HANDLE _handle = NULL;
 
-		if (m_handle) {
-			StormOpenFileEx(m_handle, name.c_str(), 0, &_handle);
-		}
-		else {
-			StormOpenFile(name.c_str(), &_handle);
-		}
+		StormOpenFileEx(m_handle ? m_handle : NULL, name.c_str(), SFILE_OPEN_FROM_MPQ, &_handle);
 
 		if (_handle) {
 			SIZE_T high; // Idk how i can use it on x32, so maximum size limit is 4gb
