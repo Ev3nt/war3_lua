@@ -29,6 +29,7 @@ namespace LuaMachine {
 			}
 
 			LuaFunctions::lua_openJassNatives(l);
+			LuaFunctions::lua_openExternalFunctions(l);
 		}
 
 		return mainState;
@@ -83,7 +84,6 @@ namespace LuaMachine {
 		switch (lua_resume(thread, l, 0, &res)) {
 		case LUA_OK:
 			JassVM->condition_return_value.Set(lua_toboolean(thread, 1), JassMachine::OPCODE_VARIABLE_BOOLEAN);
-
 
 			break;
 		case LUA_ERRRUN:

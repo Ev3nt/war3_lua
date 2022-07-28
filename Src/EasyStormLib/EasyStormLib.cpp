@@ -70,7 +70,7 @@ namespace Storm {
 
 		HANDLE _handle = NULL;
 
-		StormOpenFileEx(m_handle ? m_handle : NULL, name.c_str(), SFILE_OPEN_FROM_MPQ, &_handle);
+		StormOpenFileEx(m_handle, name.c_str(), SFILE_OPEN_FROM_MPQ, &_handle);
 
 		if (_handle) {
 			SIZE_T high; // Idk how i can use it on x32, so maximum size limit is 4gb

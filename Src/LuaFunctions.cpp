@@ -3,6 +3,7 @@
 #include "JassNatives.h"
 #include "LuaMachine.h"
 #include "JassMachine.h"
+#include "EasyStormLib/EasyStormLib.h"
 #include "Logger.h"
 
 #define lua_registerJassNative(L, n, f) (lua_pushstring(L, (n)), lua_pushcclosure(L, (f), 1), lua_setglobal(L, (n)))
@@ -395,5 +396,31 @@ namespace LuaFunctions {
 		lua_register(l, "IdToString", IdToString);
 		lua_register(l, "StringToId", StringToId);
 		lua_register(l, "FourCC", FourCC);
+	}
+
+	//--------------------------------------------------------
+
+	int lua_GetMapFileName(lua_State* l) {
+		if (lua_isboolean(l, 1)) {
+			Storm::Archive map;
+			map.Connect(*pMapMpq);
+			std::string name = map.GetArchiveName();
+
+			if (!lua_toboolean(l, 1)) {
+				size_t pathSlash = name.find_last_of('\\');
+				pathSlash != std::string::npos ? name = name.substr(pathSlash + 1) : NULL;
+			}
+
+			lua_pushstring(l, name.c_str());
+		}
+		else {
+			return luaL_typeerror(l, 1, "boolean");
+		}
+
+		return 1;
+	}
+
+	void lua_openExternalFunctions(lua_State* l) {
+		lua_register(l, "GetMapFileName", lua_GetMapFileName);
 	}
 }
