@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "JassMachine.h"
 #include "JassNatives.h"
+#include "Offsets.h"
 #include "Hooks.h"
 #include "Logger.h"
 #include "EasterEgg.h"
@@ -30,12 +31,11 @@ BOOL APIENTRY DllMain(HMODULE module, UINT reason, LPVOID reserved) {
 
 		JassMachine::JassOpcodeInitialize();
 
-		Hooks::AttachHooks();
+		Hooks::SetHooksState(true);
 
 		break;
 	case DLL_PROCESS_DETACH:
-
-		Hooks::DetachHooks();
+		Hooks::SetHooksState(false);
 
 		Logger::CloseConsole();
 
@@ -48,23 +48,17 @@ BOOL APIENTRY DllMain(HMODULE module, UINT reason, LPVOID reserved) {
 //---------------------------------------------------------------------
 
 bool StartUp() {
-	DWORD handle;
-	DWORD size = GetFileVersionInfoSize("game.dll", &handle);
-
-	LPSTR buffer = new char[size];
-	GetFileVersionInfo("game.dll", handle, size, buffer);
-
-	VS_FIXEDFILEINFO* verInfo;
-	size = sizeof(VS_FIXEDFILEINFO);
-	VerQueryValue(buffer, "\\", (LPVOID*)&verInfo, (UINT*)&size);
-	delete[] buffer;
-
-	if (((verInfo->dwFileVersionMS >> 16) & 0xffff) != 1 || ((verInfo->dwFileVersionMS >> 0) & 0xffff) != 26 || ((verInfo->dwFileVersionLS >> 16) & 0xffff) != 0 || ((verInfo->dwFileVersionLS >> 0) & 0xffff) != 6401)
-	{
+	if (!InitOffsets()) {
 		MessageBox(NULL, "Unsupported version of game.dll.\nLua will be unloaded.", "Error", MB_ICONHAND | MB_TOPMOST);
 
 		return false;
 	}
+
+	/*if (Warcraft::GetWarcraftVersion() != Warcraft::VERSION::V126a) {
+		MessageBox(NULL, "Unsupported version of game.dll.\nLua will be unloaded.", "Error", MB_ICONHAND | MB_TOPMOST);
+
+		return false;
+	}*/
 
 	PSTR cmdline = GetCommandLine();
 	size_t i;

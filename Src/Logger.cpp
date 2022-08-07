@@ -24,9 +24,6 @@ namespace Logger {
 	}
 
 	void ClearConsole() {
-		/*fflush(stdout);
-		fflush(stderr);*/
-
 		HANDLE hStdOut;
 		CONSOLE_SCREEN_BUFFER_INFO csbi;
 		DWORD count;
@@ -56,7 +53,7 @@ namespace Logger {
 		SetConsoleCursorPosition(hStdOut, homeCoords);
 	}
 
-	void Log(LOG_LEVEL level, std::string format, ...) {
+	void Log(LEVEL level, std::string format, ...) {
 		char buffer[8192] = { 0 };
 
 		va_list args;
@@ -70,22 +67,22 @@ namespace Logger {
 
 		switch (level)
 		{
-		case LOG_INFO:
+		case LEVEL::LOG_INFO:
 			color |= FOREGROUND_GREEN;
 			text = "Info";
 
 			break;
-		case LOG_ERROR:
+		case LEVEL::LOG_ERROR:
 			color |= FOREGROUND_RED;
 			text = "Error";
 
 			break;
-		case LOG_DEBUG:
+		case LEVEL::LOG_DEBUG:
 			color |= FOREGROUND_BLUE;
 			text = "Debug";
 
 			break;
-		case LOG_WARNING:
+		case LEVEL::LOG_WARNING:
 			color |= FOREGROUND_RED | FOREGROUND_GREEN;
 			text = "Warning";
 

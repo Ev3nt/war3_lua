@@ -3,6 +3,7 @@
 namespace LuaMachine {
 	extern std::map<std::string, bool> handlemetatypes;
 
+	void DestroyLua();
 	void StartLua();
 	BOOL __stdcall StartLuaThread();
 

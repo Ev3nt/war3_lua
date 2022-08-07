@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Offsets.h"
+
 //enum JASS_TYPE : BYTE {
 //	TYPE_NONE = 0,
 //	TYPE_BOOLEAN = 'B',
@@ -21,7 +23,7 @@ namespace Jass {
 	}
 
 	inline UINT ToString(LPCSTR string) {
-		return this_call<UINT>((std::ptrdiff_t)gameBase + 0x3baa20, string);
+		return this_call<UINT>(pOffsets[(UINT)Offset::jStringToString], string);
 		//return std_call<UINT>((std::ptrdiff_t)gameBase + 0x454930, string, 0);
 		/*
 		UINT* pString = new UINT[8];

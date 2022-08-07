@@ -21,11 +21,11 @@ namespace Jass {
 		JassMachine::JASS_OPLIST& oplist = jassopcodes[key];
 
 		BYTE reg = 0xD8;
-		oplist.AddOperation(JassMachine::OPTYPE_MOVRLITERAL, reg, LuaMachine::PushFunctionRef(l, index), JassMachine::OPCODE_VARIABLE_INTEGER);
-		oplist.AddOperation(JassMachine::OPTYPE_PUSH, reg);
-		oplist.AddOperation(JassMachine::OPTYPE_STARTLUATHREAD);
-		oplist.AddOperation(JassMachine::OPTYPE_MOVRR);
-		oplist.AddOperation(JassMachine::OPTYPE_RETURN);
+		oplist.AddOperation(OPCODE_TYPE::MOVRLITERAL, reg, LuaMachine::PushFunctionRef(l, index), OPCODE_VARIABLE::TYPE_INTEGER);
+		oplist.AddOperation(OPCODE_TYPE::PUSH, reg);
+		oplist.AddOperation(OPCODE_TYPE::STARTLUATHREAD);
+		oplist.AddOperation(OPCODE_TYPE::MOVRR);
+		oplist.AddOperation(OPCODE_TYPE::RETURN);
 
 		return oplist.GetCode();
 	}

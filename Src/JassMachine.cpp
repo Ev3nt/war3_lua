@@ -1,25 +1,25 @@
 #include "pch.h"
 #include "JassMachine.h"
 #include "LuaMachine.h"
+#include "Offsets.h"
 #include "fp_call.h"
 
 namespace JassMachine {
-	PVOID** ppOpcodeList = (PVOID**)((std::ptrdiff_t)gameBase + 0x45ea5a);
-	BYTE* pOpcodeListSize = (BYTE*)((std::ptrdiff_t)gameBase + 0x45ea4d);
-	PVOID opcodeDefaultOutput = (PVOID)((std::ptrdiff_t)gameBase + 0x45f79a);
-
 	PVOID OPCODE_FUNCTIONS[44];
 
 	DWORD OpcodeStartLuaThread() {
 		LuaMachine::StartLuaThread();
 
-		return c_call<int>(JassMachine::opcodeDefaultOutput);
+		return c_call<int>(pOffsets[(UINT)Offset::OpcodeDefaultOutput]); // jump
 	}
 
 	void JassOpcodeInitialize() {
+		PVOID** ppOpcodeList = (PVOID**)(pOffsets[(UINT)Offset::OpcodeList]);
+		BYTE* pOpcodeListSize = (BYTE*)(pOffsets[(UINT)Offset::OpcodeSize]);
+		
 		CopyMemory(OPCODE_FUNCTIONS, *ppOpcodeList, sizeof(OPCODE_FUNCTIONS));
 
-		OPCODE_FUNCTIONS[OPTYPE_STARTLUATHREAD - 2] = OpcodeStartLuaThread; // My own opcode function
+		OPCODE_FUNCTIONS[(UINT)OPCODE_TYPE::STARTLUATHREAD - 2] = OpcodeStartLuaThread; // My own opcode function
 
 		DWORD dwOldProtect;
 		VirtualProtect(pOpcodeListSize, sizeof(BYTE), PAGE_EXECUTE_READWRITE, &dwOldProtect);
@@ -34,7 +34,7 @@ namespace JassMachine {
 	//-----------------------------------------------------------
 
 	PJASS_THREAD_LOCAL GetJassThreadLocal() {
-		return (PJASS_THREAD_LOCAL)GetInstance(5);
+		return (PJASS_THREAD_LOCAL)Warcraft::GetTLSValueByIndex(5);
 	}
 
 	PJASS_INSTANCE GetJassMachine(UINT index) {

@@ -40,6 +40,8 @@ namespace LuaMachine {
 			lua_close(mainState);
 			mainState = NULL;
 			Jass::JassOpcodesReset();
+			Jass::JassNativesReset();
+			LuaMachine::HandleMetatablesReset();
 		}
 
 		Logger::ClearConsole();
@@ -47,11 +49,9 @@ namespace LuaMachine {
 
 
 	void StartLua() {
-		DestroyLua();
-
 		lua_State* l = GetMainState();
 		Storm::Archive map;
-		map.Connect(*pMapMpq);
+		map.Connect(*(HANDLE*)pOffsets[(UINT)Offset::LastPlayedMap]);
 		if (!map["war3map.lua"].empty()) {
 			lua_pushcfunction(l, stacktrace);
 			lua_getglobal(l, "require");
@@ -83,12 +83,12 @@ namespace LuaMachine {
 		int res;
 		switch (lua_resume(thread, l, 0, &res)) {
 		case LUA_OK:
-			JassVM->condition_return_value.Set(lua_toboolean(thread, 1), JassMachine::OPCODE_VARIABLE_BOOLEAN);
+			JassVM->condition_return_value.Set(lua_toboolean(thread, 1), OPCODE_VARIABLE::TYPE_BOOLEAN);
 
 			break;
 		case LUA_ERRRUN:
 			Error:
-			PVOID handle = ConvertHandle(Jass::GetNative("GetTriggeringTrigger").Invoke(NULL, NULL) | Jass::GetNative("GetExpiredTimer").Invoke(NULL, NULL));
+			PVOID handle = Warcraft::ConvertHandle(Jass::GetNative("GetTriggeringTrigger").Invoke(NULL, NULL) | Jass::GetNative("GetExpiredTimer").Invoke(NULL, NULL));
 
 			if (handle) {
 				fast_call<UINT>((*(UINT*)(*(UINT*)handle + 0x5c)), handle);
@@ -156,8 +156,8 @@ namespace LuaMachine {
 
 	void lua_throwerr(lua_State* l) {
 		std::string error = lua_tostring(l, -1);
-		Logger::Log(Logger::LOG_LEVEL::LOG_ERROR, error.c_str());
-		PrintfChat(100, "\n[|cFFFF0000Error|r] %s\n\n", error.c_str());
+		Logger::Log(Logger::LEVEL::LOG_ERROR, error.c_str());
+		Warcraft::PrintfChat(100, "\n[|cFFFF0000Error|r] %s\n\n", error.c_str());
 		//printf("\n%s--------------------Lua Error--------------------%s\n%s\n%s-------------------------------------------------%s\n\n", ANSI_COLOR_RED, ANSI_COLOR_RESET, error, ANSI_COLOR_RED, ANSI_COLOR_RESET);
 		//printfChat(100, "\n|cFFFF0000--------------------Lua Error--------------------|r\n%s\n|cFFFF0000------------------------------------------------------------|r\n\n", error);
 	}

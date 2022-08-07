@@ -7,7 +7,7 @@
 #define DEBUG_INFO "[" __FILE__ ":" LINE_STRING "]"
 
 namespace Logger {
-	enum LOG_LEVEL {
+	enum class LEVEL : BYTE {
 		LOG_NONE,
 		LOG_INFO,
 		LOG_ERROR,
@@ -21,7 +21,7 @@ namespace Logger {
 
 	void ClearConsole();
 
-	void Log(LOG_LEVEL level, std::string format, ...);
+	void Log(LEVEL level, std::string format, ...);
 
 	std::string format(std::string format, ...);
 }

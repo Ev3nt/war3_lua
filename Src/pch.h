@@ -11,6 +11,7 @@
 #include <lua.hpp>
 #include <iostream>
 #include <map>
+#include "Detours.h"
 #include "fp_call.h"
 
 #define ANSI_COLOR_RED     "\x1B[31m"
@@ -22,7 +23,7 @@
 #define ANSI_COLOR_RESET   "\x1B[0m"
 
 #define WAR3_LUA_MAJOR "1"
-#define WAR3_LUA_MINOR "1"
+#define WAR3_LUA_MINOR "2"
 #define WAR3_LUA_RELEASE "9"
 #define WAR3_LUA_VERSION_NAME  ANSI_COLOR_YELLOW "Outland" ANSI_COLOR_RESET
 
@@ -32,7 +33,6 @@
 #define GAME_ID "W3L"
 
 static HMODULE gameBase = GetModuleHandle("game.dll");
-static HANDLE* pMapMpq = (HANDLE*)((std::ptrdiff_t)gameBase + 0xaae788);
 
 extern bool developerMode;
 

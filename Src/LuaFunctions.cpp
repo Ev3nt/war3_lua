@@ -314,7 +314,7 @@ namespace LuaFunctions {
 
 		std::string string = Logger::format("%s: %08X", lua_tostring(l, 3), handle);
 		if (developerMode && handle > 0x100000) {
-			string += Logger::format(" | %08X", ConvertHandle(handle));
+			string += Logger::format(" | %08X", Warcraft::ConvertHandle(handle));
 		}
 
 		lua_pop(l, 2);
@@ -370,8 +370,6 @@ namespace LuaFunctions {
 	}
 
 	void lua_openJassNatives(lua_State* l) {
-		Jass::JassNativesReset();
-		LuaMachine::HandleMetatablesReset();
 		Jass::JassNativesParse();
 
 		for (const auto& type : LuaMachine::handlemetatypes) {
@@ -403,7 +401,7 @@ namespace LuaFunctions {
 	int lua_GetMapFileName(lua_State* l) {
 		if (lua_isboolean(l, 1)) {
 			Storm::Archive map;
-			map.Connect(*pMapMpq);
+			map.Connect(*(HANDLE*)pOffsets[(UINT)Offset::LastPlayedMap]);
 			std::string name = map.GetArchiveName();
 
 			if (!lua_toboolean(l, 1)) {

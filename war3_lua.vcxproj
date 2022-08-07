@@ -384,6 +384,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Src\Detours.cpp" />
     <ClCompile Include="Src\DllMain.cpp" />
     <ClCompile Include="Src\EasterEgg.cpp" />
     <ClCompile Include="Src\EasyStormLib\EasyStormLib.cpp">
@@ -399,6 +400,7 @@
     <ClCompile Include="Src\LuaFunctions.cpp" />
     <ClCompile Include="Src\LuaHooks.cpp" />
     <ClCompile Include="Src\LuaMachine.cpp" />
+    <ClCompile Include="Src\Offsets.cpp" />
     <ClCompile Include="Src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -436,6 +438,7 @@
     <ClInclude Include="3rd\lua\lundump.h" />
     <ClInclude Include="3rd\lua\lvm.h" />
     <ClInclude Include="3rd\lua\lzio.h" />
+    <ClInclude Include="Src\Detours.h" />
     <ClInclude Include="Src\EasterEgg.h" />
     <ClInclude Include="Src\EasyStormLib\EasyStormLib.h" />
     <ClInclude Include="Src\EasyStormLib\StormLib.h" />
@@ -447,10 +450,21 @@
     <ClInclude Include="Src\LuaFunctions.h" />
     <ClInclude Include="Src\LuaHooks.h" />
     <ClInclude Include="Src\LuaMachine.h" />
+    <ClInclude Include="Src\Offsets.h" />
     <ClInclude Include="Src\pch.h" />
     <ClInclude Include="Src\Warcraft.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\Detours.4.0.1\build\native\Detours.targets" Condition="Exists('packages\Detours.4.0.1\build\native\Detours.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>Данный проект ссылается на пакеты NuGet, отсутствующие на этом компьютере. Используйте восстановление пакетов NuGet, чтобы скачать их.  Дополнительную информацию см. по адресу: http://go.microsoft.com/fwlink/?LinkID=322105. Отсутствует следующий файл: {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\Detours.4.0.1\build\native\Detours.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Detours.4.0.1\build\native\Detours.targets'))" />
+  </Target>
 </Project>

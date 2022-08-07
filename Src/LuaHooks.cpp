@@ -2,6 +2,7 @@
 #include "LuaHooks.h"
 #include "EasyStormLib/EasyStormLib.h"
 #include "Warcraft.h"
+#include "Offsets.h"
 
 namespace LuaHooks {
 	//---------------------------------------------------------------------------------
@@ -27,7 +28,7 @@ namespace LuaHooks {
 		}
 
 		if (scriptName == "war3map") {
-			map.Connect(*pMapMpq);
+			map.Connect(*(HANDLE*)pOffsets[(UINT)Offset::LastPlayedMap]);
 		}
 
 		scriptName += std::string(".lua");
@@ -35,7 +36,7 @@ namespace LuaHooks {
 
 		std::string mapPath = map.GetArchiveName(scriptName);
 		if (mapPath.empty()) {
-			map.Connect(*pMapMpq);
+			map.Connect(*(HANDLE*)pOffsets[(UINT)Offset::LastPlayedMap]);
 			mapPath = map.GetArchiveName();
 			map.Close();
 		}
@@ -71,7 +72,7 @@ namespace LuaHooks {
 		Storm::Archive map;
 		std::string mapPath = map.GetArchiveName(scriptName);
 		if (mapPath.empty()) {
-			map.Connect(*pMapMpq);
+			map.Connect(*(HANDLE*)pOffsets[(UINT)Offset::LastPlayedMap]);
 			mapPath = map.GetArchiveName();
 			map.Close();
 		}
@@ -123,7 +124,7 @@ namespace LuaHooks {
 		Storm::Archive map;
 		std::string mapPath = map.GetArchiveName(scriptName);
 		if (mapPath.empty()) {
-			map.Connect(*pMapMpq);
+			map.Connect(*(HANDLE*)pOffsets[(UINT)Offset::LastPlayedMap]);
 			mapPath = map.GetArchiveName();
 			map.Close();
 		}
@@ -355,10 +356,10 @@ namespace LuaHooks {
 			LPCSTR s = luaL_tolstring(L, i, &l);
 
 			if (i > 1) {
-				PrintChat("\t", 60.f);
+				Warcraft::PrintChat("\t", 60.f);
 			}
 
-			PrintChat(luaL_tolstring(L, -1, NULL), 60.f);
+			Warcraft::PrintChat(luaL_tolstring(L, -1, NULL), 60.f);
 			lua_pop(L, 1);
 		}
 

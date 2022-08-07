@@ -1,7 +1,5 @@
 #pragma once
 
 namespace Hooks {
-	void AttachHooks();
-
-	void DetachHooks();
+	void SetHooksState(bool flag);
 }
