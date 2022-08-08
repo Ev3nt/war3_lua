@@ -8,25 +8,17 @@ jobs:
   build:
     runs-on: windows-latest
 
-    strategy:
-      matrix:
-        dotnet-version: ['3.0', '3.1.x', '5.0.x' ]
-
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
 
-    - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+    - name: Setup dotnet
       uses: actions/setup-dotnet@v2
       with:
-          dotnet-version: ${{ matrix.dotnet-version }}
-
+        dotnet-version: '3.1.x'
     - name: Install dependencies
       run: dotnet restore
-
-    - name: Build dependencies
-      run: dotnet build --configuration Release --no-restore
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1
@@ -37,6 +29,6 @@ jobs:
         Invoke-WebRequest -Method Get -Uri https://go.microsoft.com/fwlink/p/?LinkId=323507 -OutFile sdksetup.exe -UseBasicParsing
         Start-Process -Wait sdksetup.exe -ArgumentList "/q", "/norestart", "/features", "OptionId.WindowsDesktopSoftwareDevelopmentKit", "OptionId.NetFxSoftwareDevelopmentKit"
 
-    - name: Build solution
+    - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{env.BUILD_PLATFORM}} ${{env.SOLUTION_FILE_PATH}}
