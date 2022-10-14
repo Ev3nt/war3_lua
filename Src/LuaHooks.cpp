@@ -366,6 +366,44 @@ namespace LuaHooks {
 		return 0;
 	}
 
+	int luaB_getmetatable(lua_State* l) {
+		luaL_checkany(l, 1);
+		if (!lua_getmetatable(l, 1)) {
+			lua_pushnil(l);
+
+			return 1;
+		}
+
+		if (luaL_getmetafield(l, 1, "__metatable") == LUA_TSTRING) {
+			if (luaL_testudata(l, 1, lua_tostring(l, 3))) {
+				lua_pop(l, 2);
+				lua_pushnil(l);
+			}
+		}
+
+		return 1;
+	}
+
+	int luaB_type(lua_State* l) {
+		int t = lua_type(l, 1);
+		luaL_argcheck(l, t != LUA_TNONE, 1, "value expected");
+		if (t == LUA_TUSERDATA) {
+			if (lua_getmetatable(l, 1) && luaL_getmetafield(l, 1, "__metatable") == LUA_TSTRING) {
+				lua_remove(l, 2);
+
+				if (luaL_testudata(l, 1, lua_tostring(l, 2))) {
+					return 1;
+				}
+
+				lua_pop(l, 1);
+			}
+		}
+
+		lua_pushstring(l, lua_typename(l, t));
+
+		return 1;
+	}
+
 	//---------------------------------------------------------------------------------
 
 	void lua_replaceGlobals(lua_State* l) {
@@ -374,5 +412,11 @@ namespace LuaHooks {
 
 		lua_pushcfunction(l, lua_print);
 		lua_setglobal(l, "print");
+
+		lua_pushcfunction(l, luaB_getmetatable);
+		lua_setglobal(l, "getmetatable");
+
+		lua_pushcfunction(l, luaB_type);
+		lua_setglobal(l, "type");
 	}
 }

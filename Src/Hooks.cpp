@@ -10,8 +10,9 @@ namespace Hooks {
 	};
 
 	enum class ObserverRegistryTypes : UINT {
-		GAME_START_LOADING = 0x00402000,
-		GAME_FINISH_LOADING = 0x00140800
+		GAME_START_LOADING =  0x00402000, // 010000000010000000000000
+		GAME_FINISH_LOADING2 =  0x130800, // 000100110000100000000000
+		GAME_FINISH_LOADING = 0x00140800  // 000101000000100000000000
 	};
 
 	typedef struct {
@@ -36,6 +37,15 @@ namespace Hooks {
 		return pOffsets[(UINT)Offset::GetWarcraftVersionKey] ? std_call<DWORD>(pOffsets[(UINT)Offset::GetWarcraftVersionKey]) : NULL;
 	}
 
+	BOOL __fastcall GlobalDeallocator(UINT handle) {
+		lua_State* l = LuaMachine::GetMainState(false);
+		if (l) {
+			LuaMachine::DeleteUserdataByHandle(l , handle);
+		}
+
+		return pOffsets[(UINT)Offset::GlobalDeallocator] ? this_call<BOOL>(pOffsets[(UINT)Offset::GlobalDeallocator], handle) : NULL;
+	}
+
 	//--------------------------------------------
 
 	DWORD GetLuaVersionKey() {
@@ -46,7 +56,7 @@ namespace Hooks {
 		if (observer && cevent) {
 			switch (cevent->id) {
 			case (UINT)EventTypes::EVENT_CNET_GAME_START:
-				if (*observer->registry == (UINT)ObserverRegistryTypes::GAME_FINISH_LOADING) {
+				if (*observer->registry & 0x100800) { // When map loading finished (000100000000100000000000)
 					LuaMachine::StartLua();
 				}
 
@@ -62,7 +72,8 @@ namespace Hooks {
 	}
 
 	void SetHooksState(bool flag) {
-		Detour::SetState(flag,&pOffsets[(UINT)Offset::CGameEventHandler], (UINT_PTR)CGameEventHandler);
-		Detour::SetState(flag,&pOffsets[(UINT)Offset::GetWarcraftVersionKey], (UINT_PTR)GetLuaVersionKey);
+		Detour::SetState(flag, &pOffsets[(UINT)Offset::CGameEventHandler], (UINT_PTR)CGameEventHandler);
+		Detour::SetState(flag, &pOffsets[(UINT)Offset::GetWarcraftVersionKey], (UINT_PTR)GetLuaVersionKey);
+		Detour::SetState(flag, &pOffsets[(UINT)Offset::GlobalDeallocator], (UINT_PTR)GlobalDeallocator);
 	}
 }

@@ -251,7 +251,6 @@ namespace LuaFunctions {
 
 		BOOL result = native.Invoke(params.data(), size);
 
-
 		// Jass return -> Lua return
 		std::string return_type = native.GetReturnType();
 		if (isupper(return_type[0])) {
@@ -282,14 +281,8 @@ namespace LuaFunctions {
 			}
 		}
 		else {
-			result ? *(DWORD*)lua_newuserdata(l, sizeof(DWORD)) = result, luaL_setmetatable(l, return_type.c_str()) : lua_pushnil(l);
-			/*if (result) {
-				*(DWORD*)lua_newuserdata(l, sizeof(DWORD)) = result;
-				luaL_setmetatable(l, return_type.c_str());
-			}
-			else {
-				lua_pushnil(l);
-			}*/
+			LuaMachine::GetUserdataByHandle(l, result, return_type.c_str());
+			//result ? *(DWORD*)lua_newuserdata(l, sizeof(DWORD)) = result, luaL_setmetatable(l, return_type.c_str()) : lua_pushnil(l);
 		}
 
 		return 1;
@@ -307,17 +300,16 @@ namespace LuaFunctions {
 	}
 
 	int lua_handletostring(lua_State* l) {
-		lua_getmetatable(l, 1);
-		lua_getfield(l, 2, "__name");
+		luaL_getmetafield(l, 1, "__name");
 
 		UINT handle = *(UINT*)lua_touserdata(l, 1);
 
-		std::string string = Logger::format("%s: %08X", lua_tostring(l, 3), handle);
-		if (developerMode && handle > 0x100000) {
+		std::string string = Logger::format("%s: %08X", lua_tostring(l, 2), handle);
+		if (developerMode) {
 			string += Logger::format(" | %08X", Warcraft::ConvertHandle(handle));
 		}
 
-		lua_pop(l, 2);
+		lua_pop(l, 1);
 	
 		lua_pushstring(l, string.c_str());
 	
@@ -369,6 +361,17 @@ namespace LuaFunctions {
 		return 1;
 	}
 
+	int IsHandleExists(lua_State* l) {
+		if (lua_isuserdata(l, 1)) {
+			lua_pushboolean(l, *(DWORD*)lua_touserdata(l, 1) != NULL);
+		}
+		else {
+			return luaL_typeerror(l, 1, "handle");
+		}
+
+		return 1;
+	}
+
 	void lua_openJassNatives(lua_State* l) {
 		Jass::JassNativesParse();
 
@@ -394,6 +397,7 @@ namespace LuaFunctions {
 		lua_register(l, "IdToString", IdToString);
 		lua_register(l, "StringToId", StringToId);
 		lua_register(l, "FourCC", FourCC);
+		lua_register(l, "IsHandleExists", IsHandleExists);
 	}
 
 	//--------------------------------------------------------

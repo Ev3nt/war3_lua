@@ -23,6 +23,8 @@ namespace Jass {
 		BYTE reg = 0xD8;
 		oplist.AddOperation(OPCODE_TYPE::MOVRLITERAL, reg, LuaMachine::PushFunctionRef(l, index), OPCODE_VARIABLE::TYPE_INTEGER);
 		oplist.AddOperation(OPCODE_TYPE::PUSH, reg);
+		oplist.AddOperation(OPCODE_TYPE::MOVRLITERAL, reg, (DWORD)l, OPCODE_VARIABLE::TYPE_INTEGER);
+		oplist.AddOperation(OPCODE_TYPE::PUSH, reg);
 		oplist.AddOperation(OPCODE_TYPE::STARTLUATHREAD);
 		oplist.AddOperation(OPCODE_TYPE::MOVRR);
 		oplist.AddOperation(OPCODE_TYPE::RETURN);

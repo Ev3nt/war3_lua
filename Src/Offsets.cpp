@@ -18,6 +18,7 @@ bool InitOffsets() {
 		pOffsets[(UINT)Offset::GameObject] = 0xacd44c;
 		pOffsets[(UINT)Offset::GetGameUI] = 0x301250;
 		pOffsets[(UINT)Offset::DisplayTimedTextToPlayer] = 0x2f9980;
+		pOffsets[(UINT)Offset::GlobalDeallocator] = 0x1f70;
 
 		break;
 	case Warcraft::Version::V126a:
@@ -32,6 +33,7 @@ bool InitOffsets() {
 		pOffsets[(UINT)Offset::GameObject] = 0xab65f4;
 		pOffsets[(UINT)Offset::GetGameUI] = 0x300710;
 		pOffsets[(UINT)Offset::DisplayTimedTextToPlayer] = 0x2f8e40;
+		pOffsets[(UINT)Offset::GlobalDeallocator] = 0x1f70;
 
 		break;
 	case Warcraft::Version::V127a:
@@ -46,6 +48,7 @@ bool InitOffsets() {
 		pOffsets[(UINT)Offset::GameObject] = 0xbe4238;
 		pOffsets[(UINT)Offset::GetGameUI] = 0x34f3a0;
 		pOffsets[(UINT)Offset::DisplayTimedTextToPlayer] = 0x357640;
+		pOffsets[(UINT)Offset::GlobalDeallocator] = 0x218c0;
 
 		break;
 	case Warcraft::Version::V127b:
@@ -60,6 +63,7 @@ bool InitOffsets() {
 		pOffsets[(UINT)Offset::GameObject] = 0xd687a8;
 		pOffsets[(UINT)Offset::GetGameUI] = 0x36cb20;
 		pOffsets[(UINT)Offset::DisplayTimedTextToPlayer] = 0x374de0;
+		pOffsets[(UINT)Offset::GlobalDeallocator] = 0x3e9c0;
 
 		break;
 	case Warcraft::Version::V128f:
@@ -74,6 +78,7 @@ bool InitOffsets() {
 		pOffsets[(UINT)Offset::GameObject] = 0xd305e0;
 		pOffsets[(UINT)Offset::GetGameUI] = 0x3a0b70;
 		pOffsets[(UINT)Offset::DisplayTimedTextToPlayer] = 0x3a8eb0;
+		pOffsets[(UINT)Offset::GlobalDeallocator] = 0x69a50;
 
 		break;
 	default:

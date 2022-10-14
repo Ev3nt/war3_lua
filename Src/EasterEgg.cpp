@@ -46,7 +46,7 @@ std::string GetEasterText(SYSTEMTIME& date) {
 		text = "~~~ Quro started his work...  ~~~";
 	}
 
-	if (day == 6	&&	month == 4) {
+	if (day == 6	&&	month == 4  ) {
 		text = "~~~ Kokomi's day  ~~~";
 	}
 

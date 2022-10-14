@@ -16,8 +16,8 @@ namespace LuaMachine {
 
 	//----------------------------------------------------------
 
-	lua_State* GetMainState() {
-		if (!mainState) {
+	lua_State* GetMainState(bool init) {
+		if (!mainState && init) {
 			lua_State* l = mainState = luaL_newstate();
 			luaL_openlibs(l);
 			LuaHooks::lua_replaceSearchers(l);
@@ -47,7 +47,6 @@ namespace LuaMachine {
 		Logger::ClearConsole();
 	}
 
-
 	void StartLua() {
 		lua_State* l = GetMainState();
 		Storm::Archive map;
@@ -68,7 +67,7 @@ namespace LuaMachine {
 		JassMachine::PJASS_INSTANCE JassVM = JassMachine::GetJassInstance();
 		JassMachine::PJASS_STACK stack = JassVM->stack;
 
-		lua_State* l = GetMainState();
+		lua_State* l = (lua_State*)stack->Pop()->value; //GetMainState();
 		lua_State* thread = lua_newthread(l);
 		GetFunctionByRef(thread, stack->Pop()->value);
 		lua_pop(l, 1);
@@ -89,7 +88,6 @@ namespace LuaMachine {
 		case LUA_ERRRUN:
 			Error:
 			PVOID handle = Warcraft::ConvertHandle(Jass::GetNative("GetTriggeringTrigger").Invoke(NULL, NULL) | Jass::GetNative("GetExpiredTimer").Invoke(NULL, NULL));
-
 			if (handle) {
 				fast_call<UINT>((*(UINT*)(*(UINT*)handle + 0x5c)), handle);
 			}
@@ -152,6 +150,52 @@ namespace LuaMachine {
 		lua_remove(l, -2); // 1 -
 	}
 
+	int GetUserdataByHandle(lua_State* l, DWORD handle, LPCSTR tname) {
+		if (!handle) {
+			lua_pushnil(l);
+
+			return 1;
+		}
+
+		UINT key = (UINT)Warcraft::ConvertHandle(handle);
+		key ? GetGlobalTable(l, "_LUA_WARCRAFT_HANDLES", false) : (GetGlobalTable(l, std::string("_LUA_CONST_").append(tname).c_str(), false), key = handle);
+		lua_pushinteger(l, key);
+		lua_rawget(l, -2);
+
+		if (luaL_testudata(l, -1, tname)) {
+			lua_remove(l, -2);
+
+			return 1;
+		}
+		else if (lua_isnil(l, -1)) {
+			lua_pop(l, 1);
+			*(DWORD*)lua_newuserdata(l, sizeof(handle)) = handle;
+			lua_pushinteger(l, key);
+			lua_pushvalue(l, -2);
+			lua_rawset(l, -4);
+			lua_remove(l, -2);
+		}
+
+		luaL_setmetatable(l, tname);
+
+		return 1;
+	}
+
+	void DeleteUserdataByHandle(lua_State* l, DWORD handle) {
+		GetGlobalTable(l, "_LUA_WARCRAFT_HANDLES", false);
+		lua_pushinteger(l, handle);
+		lua_rawget(l, -2);
+
+		if (!lua_isnil(l, -1)) {
+			*(DWORD*)lua_touserdata(l, -1) = NULL;
+			lua_pushinteger(l, handle);
+			lua_pushnil(l);
+			lua_rawset(l, -4);
+		}
+
+		lua_pop(l, 2);
+	}
+
 	//----------------------------------------------------------
 
 	void lua_throwerr(lua_State* l) {
@@ -162,8 +206,7 @@ namespace LuaMachine {
 		//printfChat(100, "\n|cFFFF0000--------------------Lua Error--------------------|r\n%s\n|cFFFF0000------------------------------------------------------------|r\n\n", error);
 	}
 
-	int stacktrace(lua_State* L)
-	{
+	int stacktrace(lua_State* L) {
 		luaL_traceback(L, L, lua_tostring(L, -1), 0);
 
 		return 1;

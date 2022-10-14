@@ -12,6 +12,7 @@ enum class Offset : UINT {
 	GameObject,
 	GetGameUI,
 	DisplayTimedTextToPlayer,
+	GlobalDeallocator,
 	SIZE
 };
 

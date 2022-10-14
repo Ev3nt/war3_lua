@@ -62,6 +62,6 @@ namespace Warcraft {
 	}
 
 	LPVOID ConvertHandle(UINT handle) {
-		return handle ? *(LPVOID*)(*(UINT*)(*(UINT*)(*(UINT*)pOffsets[(UINT)Offset::GameObject] + 0x1c) + 0x19c) + handle * 0xc - 0x2fffff * 4) : NULL;
+		return handle > 0x100000 ? *(LPVOID*)(*(UINT*)(*(UINT*)(*(UINT*)pOffsets[(UINT)Offset::GameObject] + 0x1c) + 0x19c) + handle * 0xc - 0x2fffff * 4) : NULL;
 	}
 }
