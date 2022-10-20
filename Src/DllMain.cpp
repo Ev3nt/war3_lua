@@ -54,12 +54,6 @@ bool StartUp() {
 		return false;
 	}
 
-	/*if (Warcraft::GetWarcraftVersion() != Warcraft::VERSION::V126a) {
-		MessageBox(NULL, "Unsupported version of game.dll.\nLua will be unloaded.", "Error", MB_ICONHAND | MB_TOPMOST);
-
-		return false;
-	}*/
-
 	PSTR cmdline = GetCommandLine();
 	size_t i;
 	for (i = strlen(cmdline); i > 0 && cmdline[i] != '\"'; i--);
@@ -72,7 +66,7 @@ bool StartUp() {
 		Logger::OpenConsole(developerMode ? "Lua Console [Developer]" : "Lua Console");
 
 		system("cls");
-		printf("%s\n%s (%s)\n\n", LUA_COPYRIGHT, WAR3_LUA, WAR3_LUA_VERSION_NAME);
+		Logger::Log(Utils::format("%s\n%s (%s)\n", LUA_COPYRIGHT, WAR3_LUA, WAR3_LUA_VERSION_NAME));
 	}
 
 	return true;

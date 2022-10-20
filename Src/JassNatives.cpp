@@ -129,10 +129,8 @@ namespace Jass {
 	}
 
 	void JassNativesParse() {
-		size_t size = 0;
 		JassMachine::PJASS_THREAD_LOCAL jassThreadLocal = JassMachine::GetJassThreadLocal();
 		for (auto native = jassThreadLocal->firstNative; native < jassThreadLocal->lastNative; native = native->next) {
-			//printf("%s %s = %d\n", native->name, native->arguments, ++size);
 			jassnatives[native->name] = JASSNATIVE(native->callback, native->arguments);
 		}
 

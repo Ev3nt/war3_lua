@@ -23,7 +23,5 @@ namespace Logger {
 
 	void ClearConsole();
 
-	void Log(LEVEL level, std::string format, ...);
-
-	std::string format(std::string format, ...);
+	void Log(std::string info, LEVEL level = LEVEL::LOG_NONE);
 }

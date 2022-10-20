@@ -202,10 +202,10 @@ namespace Hooks {
 						}
 
 						if (!Logger::isConsole) {
-							Logger::OpenConsole(developerMode ? "UjAPI Lua Console [Developer]" : "UjAPI Lua Console");
+							Logger::OpenConsole(developerMode ? "(UjAPI) Lua Console [Developer]" : "(UjAPI) Lua Console");
 
 							system("cls");
-							printf("%s\n%s (%s)\n\n", LUA_COPYRIGHT, WAR3_LUA, WAR3_LUA_VERSION_NAME);
+							Logger::Log(Utils::format("%s\n%s (%s)\n", LUA_COPYRIGHT, WAR3_LUA, WAR3_LUA_VERSION_NAME));
 						}
 						else {
 							Logger::CloseConsole();

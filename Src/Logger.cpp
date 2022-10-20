@@ -70,14 +70,7 @@ namespace Logger {
 		SetConsoleCursorPosition(hStdOut, homeCoords);
 	}
 
-	void Log(LEVEL level, std::string format, ...) {
-		char buffer[8192] = { 0 };
-
-		va_list args;
-		va_start(args, format);
-		vsprintf_s(buffer, format.c_str(), args);
-		va_end(args);
-
+	void Log(std::string info, LEVEL level) {
 		HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 		WORD color = NULL;
 		LPCSTR text = NULL;
@@ -114,18 +107,6 @@ namespace Logger {
 			std::cout << "] ";
 		}
 
-		std::cout << buffer << std::endl;
-	}
-
-	std::string format(std::string format, ...) {
-		va_list args;
-		va_start(args, format);
-
-		char buffer[8192];
-		vsprintf_s(buffer, format.c_str(), args);
-
-		va_end(args);
-
-		return std::string(buffer);
+		std::cout << info << std::endl;
 	}
 }

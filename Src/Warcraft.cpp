@@ -2,6 +2,7 @@
 #include "Warcraft.h"
 #include "Offsets.h"
 #include "fp_call.h"
+#include "Utils.h"
 
 namespace Warcraft {
 	VS_FIXEDFILEINFO* GetFileVersion(LPCSTR filename) {
@@ -36,17 +37,6 @@ namespace Warcraft {
 
 	void PrintChat(LPCSTR text, float duration, DWORD color) {
 		fast_call<void>(pOffsets[(UINT)Offset::DisplayTimedTextToPlayer], GetGameUI(0, 0), NULL, 0, 0, text, *(UINT*)&duration, color);
-	}
-
-	void PrintfChat(float duration, LPCSTR format, ...) {
-		char text[8192] = { NULL };
-
-		va_list args;
-		va_start(args, format);
-		vsprintf_s(text, format, args);
-		va_end(args);
-
-		PrintChat(text, duration);
 	}
 
 	HANDLE GetTLSValue() {

@@ -2,7 +2,6 @@
 #include "JassMachine.h"
 #include "LuaMachine.h"
 #include "Offsets.h"
-#include "fp_call.h"
 
 namespace JassMachine {
 	PVOID OPCODE_FUNCTIONS[44];

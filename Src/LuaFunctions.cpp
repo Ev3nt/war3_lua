@@ -4,7 +4,6 @@
 #include "LuaMachine.h"
 #include "JassMachine.h"
 #include "EasyStormLib/EasyStormLib.h"
-#include "Logger.h"
 
 #define lua_registerJassNative(L, n, f) (lua_pushstring(L, (n)), lua_pushcclosure(L, (f), 1), lua_setglobal(L, (n)))
 
@@ -304,22 +303,15 @@ namespace LuaFunctions {
 
 		UINT handle = *(UINT*)lua_touserdata(l, 1);
 
-		std::string string = Logger::format("%s: %08X", lua_tostring(l, 2), handle);
-		if (developerMode) {
-			string += Logger::format(" | %08X", Warcraft::ConvertHandle(handle));
-		}
+		std::string string = !developerMode ? 
+							 Utils::format("%s: %08X", lua_tostring(l, 2), handle) : 
+							 Utils::format("%s: %08X | %08X", lua_tostring(l, 2), handle, Warcraft::ConvertHandle(handle));
 
 		lua_pop(l, 1);
 	
 		lua_pushstring(l, string.c_str());
 	
 		return 1;
-	}
-
-	int lua_close(lua_State* l) {
-		*(DWORD*)lua_touserdata(l, 1) = NULL;
-
-		return 0;
 	}
 
 	int IdToString(lua_State* l) {

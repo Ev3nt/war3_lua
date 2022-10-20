@@ -13,6 +13,7 @@
 #include <map>
 #include "Detours.h"
 #include "fp_call.h"
+#include "Utils.h"
 
 #define ANSI_COLOR_RED     "\x1B[31m"
 #define ANSI_COLOR_GREEN   "\x1B[32m"

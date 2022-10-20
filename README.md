@@ -34,7 +34,7 @@ require "script"
 *script.lua*
 ```lua
 local unit = CreateUnit(Player(0), FourCC("Hpal"), 0, 0, 0) --> Creating unit
-SetUnitColor(unit, Player(1)) --> Changing color
+SetUnitColor(unit, ConvertPlayerColor(1)) --> Changing color
 ```
 
 If you wanna display some text, use "**print**" to type it in the chat, and "**printc**" to display text in console. Don't forget to use **console mode**.

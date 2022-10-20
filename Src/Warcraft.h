@@ -59,7 +59,6 @@ namespace Warcraft {
 	Version GetWarcraftVersion();
 
 	void PrintChat(LPCSTR text, float duration, DWORD color = 0xFFFFFFFF);
-	void PrintfChat(float duration, LPCSTR format, ...);
 	DWORD GetTLSValueByIndex(UINT index);
 	LPVOID ConvertHandle(UINT handle);
 }

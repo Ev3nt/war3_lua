@@ -407,6 +407,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Src\Utils.cpp" />
     <ClCompile Include="Src\Warcraft.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -452,6 +453,7 @@
     <ClInclude Include="Src\LuaMachine.h" />
     <ClInclude Include="Src\Offsets.h" />
     <ClInclude Include="Src\pch.h" />
+    <ClInclude Include="Src\Utils.h" />
     <ClInclude Include="Src\Warcraft.h" />
   </ItemGroup>
   <ItemGroup>

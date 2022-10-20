@@ -200,10 +200,8 @@ namespace LuaMachine {
 
 	void lua_throwerr(lua_State* l) {
 		std::string error = lua_tostring(l, -1);
-		Logger::Log(Logger::LEVEL::LOG_ERROR, error.c_str());
-		Warcraft::PrintfChat(100, "\n[|cFFFF0000Error|r] %s\n\n", error.c_str());
-		//printf("\n%s--------------------Lua Error--------------------%s\n%s\n%s-------------------------------------------------%s\n\n", ANSI_COLOR_RED, ANSI_COLOR_RESET, error, ANSI_COLOR_RED, ANSI_COLOR_RESET);
-		//printfChat(100, "\n|cFFFF0000--------------------Lua Error--------------------|r\n%s\n|cFFFF0000------------------------------------------------------------|r\n\n", error);
+		Logger::Log(error, Logger::LEVEL::LOG_ERROR);
+		Warcraft::PrintChat(Utils::format("\n[|cFFFF0000Error|r] %s\n\n", error).c_str(), 100);
 	}
 
 	int stacktrace(lua_State* L) {

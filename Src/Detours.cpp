@@ -1,14 +1,15 @@
 #include "pch.h"
 #include "Detours.h"
+#include "Logger.h"
 
 namespace Detour {
 	BOOL Install(UINT_PTR* pointer_ptr, UINT_PTR detour) {
 		BOOL error = NO_ERROR;
 
-		if ((error = DetourTransactionBegin()) != NO_ERROR) { printf("DetourTransactionBegin failed with error: %d.\n", error); }
-		if (!error && (error = DetourUpdateThread(GetCurrentThread())) != NO_ERROR) { printf("DetourUpdateThread failed with error: %d.\n", error); }
-		if (!error && (error = DetourAttach((PVOID*)pointer_ptr, (PVOID)detour)) != NO_ERROR) { printf("DetourAttach failed with error: %d.\n", error); }
-		if (!error && (error = DetourTransactionCommit()) != NO_ERROR) { printf("DetourTransactionCommit failed with error: %d.\n", error); }
+		if ((error = DetourTransactionBegin()) != NO_ERROR) { Logger::Log(Utils::format("DetourTransactionBegin failed with error: %d.\n", error)); }
+		if (!error && (error = DetourUpdateThread(GetCurrentThread())) != NO_ERROR) { Logger::Log(Utils::format("DetourUpdateThread failed with error: %d.\n", error)); }
+		if (!error && (error = DetourAttach((PVOID*)pointer_ptr, (PVOID)detour)) != NO_ERROR) { Logger::Log(Utils::format("DetourAttach failed with error: %d.\n", error)); }
+		if (!error && (error = DetourTransactionCommit()) != NO_ERROR) { Logger::Log(Utils::format("DetourTransactionCommit failed with error: %d.\n", error)); }
 
 		if (error != NO_ERROR) { DetourTransactionAbort(); }
 
@@ -18,10 +19,10 @@ namespace Detour {
 	BOOL Uninstall(UINT_PTR* pointer_ptr, UINT_PTR detour) {
 		BOOL error = NO_ERROR;
 
-		if ((error = DetourTransactionBegin()) != NO_ERROR) { wprintf_s(L"DetourTransactionBegin failed with error: %d.\n", error); }
-		if (!error && (error = DetourUpdateThread(::GetCurrentThread())) != NO_ERROR) { wprintf_s(L"DetourUpdateThread failed with error: %d.\n", error); }
-		if (!error && (error = DetourDetach((PVOID*)pointer_ptr, (PVOID)detour)) != NO_ERROR) { wprintf_s(L"DetourAttach failed with error: %d.\n", error); }
-		if (!error && (error = DetourTransactionCommit()) != NO_ERROR) { wprintf_s(L"DetourTransactionCommit failed with error: %d.\n", error); }
+		if ((error = DetourTransactionBegin()) != NO_ERROR) { Logger::Log(Utils::format("DetourTransactionBegin failed with error: %d.\n", error)); }
+		if (!error && (error = DetourUpdateThread(::GetCurrentThread())) != NO_ERROR) { Logger::Log(Utils::format("DetourUpdateThread failed with error: %d.\n", error)); }
+		if (!error && (error = DetourDetach((PVOID*)pointer_ptr, (PVOID)detour)) != NO_ERROR) { Logger::Log(Utils::format("DetourAttach failed with error: %d.\n", error)); }
+		if (!error && (error = DetourTransactionCommit()) != NO_ERROR) { Logger::Log(Utils::format("DetourTransactionCommit failed with error: %d.\n", error)); }
 
 		if (error != NO_ERROR) { DetourTransactionAbort(); }
 
