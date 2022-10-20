@@ -15,6 +15,8 @@ namespace Logger {
 		LOG_WARNING
 	};
 
+	extern bool isConsole;
+
 	void OpenConsole(std::string name = "");
 
 	void CloseConsole();

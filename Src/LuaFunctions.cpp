@@ -290,14 +290,14 @@ namespace LuaFunctions {
 
 	//--------------------------------------------------------
 
-	int lua_handleequal(lua_State* l) {
+	/*int lua_handleequal(lua_State* l) {
 		PDWORD param1 = (PDWORD)lua_touserdata(l, 1);
 		PDWORD param2 = (PDWORD)lua_touserdata(l, 2);
 
 		lua_pushboolean(l, (param1 ? *param1 : NULL) == (param2 ? *param2 : NULL));
 
 		return 1;
-	}
+	}*/
 
 	int lua_handletostring(lua_State* l) {
 		luaL_getmetafield(l, 1, "__name");
@@ -361,7 +361,7 @@ namespace LuaFunctions {
 		return 1;
 	}
 
-	int IsHandleExists(lua_State* l) {
+	/*int IsHandleExists(lua_State* l) {
 		if (lua_isuserdata(l, 1)) {
 			lua_pushboolean(l, *(DWORD*)lua_touserdata(l, 1) != NULL);
 		}
@@ -370,15 +370,15 @@ namespace LuaFunctions {
 		}
 
 		return 1;
-	}
+	}*/
 
 	void lua_openJassNatives(lua_State* l) {
 		Jass::JassNativesParse();
 
 		for (const auto& type : LuaMachine::handlemetatypes) {
 			if (luaL_newmetatable(l, type.first.c_str())) {
-				lua_pushcfunction(l, lua_handleequal);
-				lua_setfield(l, -2, "__eq");
+				/*lua_pushcfunction(l, lua_handleequal);
+				lua_setfield(l, -2, "__eq");*/
 
 				lua_pushcfunction(l, lua_handletostring);
 				lua_setfield(l, -2, "__tostring");
@@ -397,7 +397,7 @@ namespace LuaFunctions {
 		lua_register(l, "IdToString", IdToString);
 		lua_register(l, "StringToId", StringToId);
 		lua_register(l, "FourCC", FourCC);
-		lua_register(l, "IsHandleExists", IsHandleExists);
+		//lua_register(l, "IsHandleExists", IsHandleExists);
 	}
 
 	//--------------------------------------------------------

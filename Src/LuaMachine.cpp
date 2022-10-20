@@ -73,8 +73,8 @@ namespace LuaMachine {
 		lua_pop(l, 1);
 
 		if (!lua_isfunction(thread, -1)) {
-			lua_pop(thread, 1);
-			lua_pushstring(thread, "Couldn't start the thread. Write to me at XGM or VK.");
+			lua_pushfstring(thread, "Couldn't start the thread. Expected type function, got %s (stack size %d). Contact me at XGM or VK.", lua_typename(l, lua_type(thread, -1)), lua_gettop(thread));
+			lua_remove(thread, -2);
 
 			goto Error;
 		}

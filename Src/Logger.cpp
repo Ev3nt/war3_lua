@@ -2,7 +2,13 @@
 #include "Logger.h"
 
 namespace Logger {
+	bool isConsole = false;
+
 	void OpenConsole(std::string name) {
+		if (isConsole) {
+			return;
+		}
+
 		AllocConsole();
 		freopen_s((FILE**)stdin, "CONIN$", "r", stdin);
 		freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
@@ -14,13 +20,24 @@ namespace Logger {
 		if (!name.empty()) {
 			SetConsoleTitle(name.c_str());
 		}
+
+		isConsole = true;
 	}
 
 	void CloseConsole() {
+		if (!isConsole) {
+			return;
+		}
+
 		fclose(stdin);
 		fclose(stdout);
 		fclose(stderr);
+
+		HWND console = GetConsoleWindow();
 		FreeConsole();
+		CloseWindow(console);
+
+		isConsole = false;
 	}
 
 	void ClearConsole() {
