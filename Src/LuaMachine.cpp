@@ -86,8 +86,12 @@ namespace LuaMachine {
 
 			break;
 		case LUA_ERRRUN:
-			Error:
-			PVOID handle = Warcraft::ConvertHandle(Jass::GetNative("GetTriggeringTrigger").Invoke(NULL, NULL) | Jass::GetNative("GetExpiredTimer").Invoke(NULL, NULL));
+		Error:
+			PVOID handle = Warcraft::ConvertHandle(Jass::GetNative("GetTriggeringTrigger").Invoke(NULL, NULL));
+			if (!handle) {
+				handle = Warcraft::ConvertHandle(Jass::GetNative("GetExpiredTimer").Invoke(NULL, NULL));
+			}
+
 			if (handle) {
 				fast_call<UINT>((*(UINT*)(*(UINT*)handle + 0x5c)), handle);
 			}
@@ -201,7 +205,7 @@ namespace LuaMachine {
 	void lua_throwerr(lua_State* l) {
 		std::string error = lua_tostring(l, -1);
 		Logger::Log(error, Logger::LEVEL::LOG_ERROR);
-		Warcraft::PrintChat(Utils::format("\n[|cFFFF0000Error|r] %s\n\n", error).c_str(), 100);
+		Warcraft::PrintChat(Utils::format("[|cFFFF0000Error|r] %s", error).c_str(), 100);
 	}
 
 	int stacktrace(lua_State* L) {

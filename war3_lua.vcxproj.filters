@@ -150,9 +150,6 @@
     <ClCompile Include="3rd\lua\lzio.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Src\EasterEgg.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Src\Offsets.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -282,9 +279,6 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="3rd\lua\lzio.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\EasterEgg.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Src\Offsets.h">

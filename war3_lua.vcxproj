@@ -74,7 +74,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>D:\Warcraft III\</OutDir>
     <IntDir>$(SolutionDir)Build\obj\</IntDir>
-    <TargetExt>.mix</TargetExt>
+    <TargetExt>.dll</TargetExt>
     <SourcePath>$(SolutionDir)3rd\lua;$(SourcePath)</SourcePath>
     <IncludePath>$(SolutionDir)3rd\lua;$(IncludePath)</IncludePath>
   </PropertyGroup>
@@ -82,7 +82,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)Build\bin\</OutDir>
     <IntDir>$(SolutionDir)Build\obj\</IntDir>
-    <TargetExt>.mix</TargetExt>
+    <TargetExt>.dll</TargetExt>
     <SourcePath>$(SolutionDir)3rd\lua;$(SourcePath)</SourcePath>
     <IncludePath>$(SolutionDir)3rd\lua;$(IncludePath)</IncludePath>
   </PropertyGroup>
@@ -90,7 +90,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>D:\Warcraft III\</OutDir>
     <IntDir>$(SolutionDir)Build\obj\</IntDir>
-    <TargetExt>.mix</TargetExt>
+    <TargetExt>.dll</TargetExt>
     <SourcePath>$(SolutionDir)3rd\lua;$(SourcePath)</SourcePath>
     <IncludePath>$(SolutionDir)3rd\lua;$(IncludePath)</IncludePath>
   </PropertyGroup>
@@ -98,7 +98,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)Build\bin\</OutDir>
     <IntDir>$(SolutionDir)Build\obj\</IntDir>
-    <TargetExt>.mix</TargetExt>
+    <TargetExt>.dll</TargetExt>
     <SourcePath>$(SolutionDir)3rd\lua;$(SourcePath)</SourcePath>
     <IncludePath>$(SolutionDir)3rd\lua;$(IncludePath)</IncludePath>
   </PropertyGroup>
@@ -386,7 +386,6 @@
     </ClCompile>
     <ClCompile Include="Src\Detours.cpp" />
     <ClCompile Include="Src\DllMain.cpp" />
-    <ClCompile Include="Src\EasterEgg.cpp" />
     <ClCompile Include="Src\EasyStormLib\EasyStormLib.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../pch.h</PrecompiledHeaderFile>
@@ -440,7 +439,6 @@
     <ClInclude Include="3rd\lua\lvm.h" />
     <ClInclude Include="3rd\lua\lzio.h" />
     <ClInclude Include="Src\Detours.h" />
-    <ClInclude Include="Src\EasterEgg.h" />
     <ClInclude Include="Src\EasyStormLib\EasyStormLib.h" />
     <ClInclude Include="Src\EasyStormLib\StormLib.h" />
     <ClInclude Include="Src\fp_call.h" />

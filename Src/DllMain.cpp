@@ -25,10 +25,6 @@ BOOL APIENTRY DllMain(HMODULE module, UINT reason, LPVOID reserved) {
 			return FALSE;
 		}
 
-		GetLocalTime(&date);
-		celebratingText = GetEasterText(date);
-		!celebratingText.empty() ? MessageBox(NULL, celebratingText.c_str(), "Celebration Message!", MB_ICONINFORMATION) : NULL;
-
 		JassMachine::JassOpcodeInitialize();
 
 		Hooks::SetHooksState(true);
