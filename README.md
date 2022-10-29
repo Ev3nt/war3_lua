@@ -1,4 +1,4 @@
-# War3 Lua - 1.3.1 (<span style="color:orange">Outland</span>)
+# War3 Lua - 1.3.2 (<span style="color:orange">Outland</span>)
 
 [![build](https://github.com/Ev3nt/war3_lua/actions/workflows/build.yml/badge.svg)](https://github.com/Ev3nt/war3_lua/actions/workflows/build.yml)
 ![lua](https://img.shields.io/badge/lua-v5.4.4-blue)

@@ -12,6 +12,8 @@ namespace LuaMachine {
 
 	void lua_throwerr(lua_State* l);
 
+	void lua_throwWarning(lua_State* l, std::string msg);
+
 	int stacktrace(lua_State* L);
 
 	//----------------------------------------------------------
@@ -30,6 +32,7 @@ namespace LuaMachine {
 
 			LuaFunctions::lua_openJassNatives(l);
 			LuaFunctions::lua_openExternalFunctions(l);
+			LuaFunctions::lua_openJassVariables(l);
 		}
 
 		return mainState;
@@ -87,15 +90,18 @@ namespace LuaMachine {
 			break;
 		case LUA_ERRRUN:
 		Error:
-			PVOID handle = Warcraft::ConvertHandle(Jass::GetNative("GetTriggeringTrigger").Invoke(NULL, NULL));
-			if (!handle) {
-				handle = Warcraft::ConvertHandle(Jass::GetNative("GetExpiredTimer").Invoke(NULL, NULL));
+			UINT index = Jass::GetNative("GetTriggeringTrigger").Invoke(NULL, NULL);
+			if (!index) {
+				index = Jass::GetNative("GetExpiredTimer").Invoke(NULL, NULL);
 			}
 
+			PVOID handle = Warcraft::ConvertHandle(index);
 			if (handle) {
 				fast_call<UINT>((*(UINT*)(*(UINT*)handle + 0x5c)), handle);
 			}
 
+			stacktrace(thread);
+			lua_remove(thread, -2);
 			lua_throwerr(thread);
 
 			return FALSE;
@@ -206,6 +212,15 @@ namespace LuaMachine {
 		std::string error = lua_tostring(l, -1);
 		Logger::Log(error, Logger::LEVEL::LOG_ERROR);
 		Warcraft::PrintChat(Utils::format("[|cFFFF0000Error|r] %s", error).c_str(), 100);
+	}
+
+	void lua_throwWarning(lua_State* l, std::string msg) {
+		luaL_traceback(l, l, msg.c_str(), 0);
+		std::string warning = lua_tostring(l, -1);
+		lua_pop(l, 1);
+
+		Logger::Log(warning, Logger::LEVEL::LOG_WARNING);
+		Warcraft::PrintChat(Utils::format("[|cFFC19C00Warning|r] %s", warning).c_str(), 100);
 	}
 
 	int stacktrace(lua_State* L) {

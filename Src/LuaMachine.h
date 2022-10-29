@@ -17,4 +17,8 @@ namespace LuaMachine {
 
 	BOOL GetUserdataByHandle(lua_State* l, DWORD handle, LPCSTR tname);
 	void DeleteUserdataByHandle(lua_State* l, DWORD handle);
+
+	void lua_throwerr(lua_State* l);
+
+	void lua_throwWarning(lua_State* l, std::string msg);
 }

@@ -374,9 +374,16 @@ namespace LuaHooks {
 			return 1;
 		}
 
-		if (luaL_getmetafield(l, 1, "__metatable") == LUA_TSTRING) {
+		/*if (luaL_getmetafield(l, 1, "__metatable") == LUA_TSTRING) {
 			if (luaL_testudata(l, 1, lua_tostring(l, 3))) {
 				lua_pop(l, 2);
+				lua_pushnil(l);
+			}
+		}*/
+
+		if (luaL_getmetafield(l, 1, "__metatable") == LUA_TBOOLEAN) {
+			if (lua_toboolean(l, -1) == FALSE) {
+				lua_pop(l, 1);
 				lua_pushnil(l);
 			}
 		}

@@ -14,6 +14,7 @@ enum class Offset : UINT {
 	DisplayTimedTextToPlayer,
 	GlobalDeallocator,
 	OnProcMain,
+	GetjVariableByName,
 	SIZE
 };
 

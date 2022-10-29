@@ -115,21 +115,21 @@ namespace JassMachine {
 
 	typedef struct CStringRep {
 		uintptr_t vtable;        // 0x0
-		uint32_t refCount;    // 0x4
-		uint32_t hash;        // 0x8
+		UINT refCount;    // 0x4
+		UINT hash;        // 0x8
 		PVOID table;        // 0xC
 		CStringRep* prev;        // 0x10
 		/* txtnode */
-		void* prevtxtnode; // 0x14  ?
+		PVOID prevtxtnode; // 0x14  ?
 		CStringRep* next;         // 0x18
 		char* text;         // 0x1C
 	} * PCStringRep;//sizeof = 0x20
 
 	typedef struct {
-		uintptr_t vtable;        // 0x0 void**
-		uint32_t unk1;        // 0x4
+		uintptr_t vtable;        // 0x0 PVOID*
+		UINT unk1;        // 0x4
 		PCStringRep stringRep;    // 0x8
-		uint32_t unk2;
+		UINT unk2;
 	} RCString, * PRCString;
 
 	typedef struct {
@@ -190,6 +190,39 @@ namespace JassMachine {
 	} JASS_OPCODE, * PJASS_OPCODE;
 
 	typedef struct {
+		UINT max;
+		UINT min;
+		UINT* value;
+	} JASS_DATA_LIST, * PJASS_DATA_LIST;
+
+	typedef struct {
+		uintptr_t* vtable;            // 0x0
+		JASS_DATA_LIST list;            // 0x4 - 0xC
+	} JASS_ARRAY, * PJASS_ARRAY;
+
+	typedef struct JASS_VARIABLE {
+		UINT				hashKey;		// 0x0
+		PVOID unk_04;			// 0x4
+		PVOID unk_08;			// 0x8
+		PVOID prev;			// 0xC
+		JASS_VARIABLE* next;			// 0x10
+		LPCSTR name;			// 0x14
+		UINT				recType;		// 0x18
+		UINT				retType;		// 0x1C
+		UINT				value;			// 0x20
+	} * PJASS_VARIABLE;
+
+	typedef struct {
+		uintptr_t* vtable;                            // 0x00
+		UINT        comCount;                        // 0x04
+		PJASS_VARIABLE variableReversed;                // 0x08
+		PJASS_VARIABLE variable;                        // 0x0C
+		UINT        unk_10;                            // 0x10
+		UINT        customVariables[3];                // 0x14 - 0x20
+		UINT        unk_24;                            // 0x24
+	} SCRIPT_DATA_TABLE, * PSCRIPT_DATA_TABLE;
+
+	typedef struct {
 		BYTE unk0[0x20]; // 0x00
 		PJASS_OPCODE opcode; // 0x20
 		BYTE unk1[0x10]; // 0x24
@@ -198,13 +231,15 @@ namespace JassMachine {
 		JASS_DATA_SLOT condition_return_value; // 0x50
 		BYTE unk3[0x27D8]; // 0x54
 		size_t index; // 0x2850
-		BYTE unk4[0x14]; // 0x2854
-		PJASS_STACK stack; // 0x2868
+		BYTE unk4[0x8]; // 0x2854
+		PSCRIPT_DATA_TABLE script_table;
 		BYTE unk5[0x8];
+		PJASS_STACK stack; // 0x2868
+		BYTE unk6[0x8];
 		PSTRING_TABLE string_table; // 0x2874
-		BYTE unk6[0x10];
+		BYTE unk7[0x10];
 		PCODE_TABLE code_table;
-		BYTE unk7[0x1C];
+		BYTE unk8[0x1C];
 	} JASS_INSTANCE, * PJASS_INSTANCE;
 
 #pragma pack(push)
@@ -271,4 +306,8 @@ namespace JassMachine {
 	//---------------------------------------------------------
 
 	void JassOpcodeInitialize();
+
+	PJASS_VARIABLE GetVariableDataNodeByName(PSCRIPT_DATA_TABLE pDataNode, const std::string& name);
+
+	PJASS_VARIABLE GetVariableDataNodeByNameEx(PJASS_INSTANCE jvm, const std::string& name);
 }

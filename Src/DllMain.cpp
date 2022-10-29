@@ -4,11 +4,11 @@
 #include "Offsets.h"
 #include "Hooks.h"
 #include "Logger.h"
-#include "EasterEgg.h"
+//#include "EasterEgg.h"
 
 bool developerMode = false;
-SYSTEMTIME date;
-std::string celebratingText;
+//SYSTEMTIME date;
+//std::string celebratingText;
 
 bool StartUp();
 

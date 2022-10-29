@@ -47,4 +47,14 @@ namespace JassMachine {
 
 		return *(std::ptrdiff_t*)((std::ptrdiff_t)instance + 0x14) ? *(PJASS_INSTANCE*)(*(std::ptrdiff_t*)((std::ptrdiff_t)instance + 0xc) + *(UINT*)((std::ptrdiff_t)instance + 0x14) * 4 - 4) : NULL;
 	}
+
+	PJASS_VARIABLE GetVariableDataNodeByName(PSCRIPT_DATA_TABLE pDataNode, const std::string& name) {
+		return pOffsets[(UINT)Offset::GetjVariableByName] && pDataNode && !name.empty() ? this_call<PJASS_VARIABLE>(pOffsets[(UINT)Offset::GetjVariableByName], pDataNode, name.data()) : NULL;
+	}
+
+	PJASS_VARIABLE GetVariableDataNodeByNameEx(PJASS_INSTANCE jvm, const std::string& name) {
+		PJASS_VARIABLE pData = (int)(jvm->stack) > NULL ? GetVariableDataNodeByName((PSCRIPT_DATA_TABLE)&jvm->stack[36], name.data()) : NULL; // Check for local first // 0x2868
+
+		return !pData ? GetVariableDataNodeByName(jvm->script_table, name.data()) : pData;
+	}
 }
