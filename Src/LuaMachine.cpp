@@ -62,18 +62,18 @@ namespace LuaMachine {
 				lua_throwerr(l);
 			}
 
-			lua_pop(l, 2);
+			lua_pop(l, lua_gettop(l));
 		}
 	}
 
 	BOOL __stdcall StartLuaThread() {
 		JassMachine::PJASS_INSTANCE JassVM = JassMachine::GetJassInstance();
 		JassMachine::PJASS_STACK stack = JassVM->stack;
+		BOOL result = TRUE;
 
 		lua_State* l = (lua_State*)stack->Pop()->value; //GetMainState();
 		lua_State* thread = lua_newthread(l);
 		GetFunctionByRef(thread, stack->Pop()->value);
-		lua_pop(l, 1);
 
 		if (!lua_isfunction(thread, -1)) {
 			lua_pushfstring(thread, "Couldn't start the thread. Expected type function, got %s (stack size %d). Contact me at XGM or VK.", lua_typename(l, lua_type(thread, -1)), lua_gettop(thread));
@@ -104,10 +104,12 @@ namespace LuaMachine {
 			lua_remove(thread, -2);
 			lua_throwerr(thread);
 
-			return FALSE;
+			result = FALSE;
 		}
 
-		return TRUE;
+		lua_pop(l, lua_gettop(l)); // It should be there, cause gc can dealloc the thread, before code has been done.
+
+		return result;
 	}
 
 	//----------------------------------------------------------

@@ -157,10 +157,15 @@ namespace LuaFunctions {
 			return 0;
 		}
 		
-		std::size_t size = native.GetParams().size();
-		std::vector<float> floats;
+		const std::vector<std::string>& paramsTypes = native.GetParams();
+		std::size_t size = paramsTypes.size();
+		std::size_t floatsCount = 0;
+		for (const std::string& param : paramsTypes) {
+			floatsCount += (size_t)(param == "R");
+		}
+
 		std::vector<UINT> params;
-		params.resize(size);
+		params.resize(size + floatsCount);
 		UINT i = 1;
 
 		// Lua parameters -> Jass parameters
@@ -202,8 +207,10 @@ namespace LuaFunctions {
 					break;
 				case 'R': {
 					if (lua_isnumber(l, i)) {
-						floats.push_back((float)lua_tonumber(l, i));
-						params[i - 1] = (DWORD)&floats[floats.size() - 1];
+						--floatsCount;
+
+						*(float*)(&params[size + floatsCount]) = (float)lua_tonumber(l, i);
+						params[i - 1] = (DWORD)&params[size + floatsCount];
 					}
 					else {
 						return luaL_typeerror(l, i, "number");
