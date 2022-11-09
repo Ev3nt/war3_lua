@@ -34,7 +34,7 @@ namespace Jass {
 
 	//---------------------------------------------------------
 
-	JASSNATIVE::JASSNATIVE(LPVOID address, std::string params) : m_address(address) {
+	JASSNATIVE::JASSNATIVE(LPVOID address, std::string params) : m_address(address), m_realsCount(0) {
 		for (size_t i = 1; i < params.size(); i++) {
 			if (params[i] == ')') {
 				break;
@@ -51,6 +51,8 @@ namespace Jass {
 			}
 
 			m_params.push_back(type);
+
+			m_realsCount += (size_t)(type == "R");
 		}
 
 		if (size_t beg = params.find(')') + 1) {
@@ -81,6 +83,10 @@ namespace Jass {
 
 	PVOID JASSNATIVE::GetAddress() {
 		return m_address;
+	}
+
+	const size_t JASSNATIVE::GetRealsCount() {
+		return m_realsCount;
 	}
 
 	DWORD JASSNATIVE::Invoke(LPVOID params, size_t size) {

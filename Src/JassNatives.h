@@ -65,9 +65,11 @@ namespace Jass {
 		const std::vector<std::string>& GetParams();
 		const std::string& GetReturnType();
 		PVOID GetAddress();
+		const size_t GetRealsCount();
 
 		DWORD Invoke(LPVOID params, size_t size);
 	private:
+		size_t m_realsCount;
 		PVOID m_address;
 		std::vector<std::string> m_params;
 		std::string m_returntype;
