@@ -20,6 +20,9 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
 
+    - name: Install NuGet Packages
+      run: msbuild -t:restore
+
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1
 
