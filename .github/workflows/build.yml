@@ -20,9 +20,6 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
 
-    - name: Install NuGet Packages
-      run: msbuild -t:restore
-
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1
 
@@ -31,6 +28,9 @@ jobs:
       run: |
         Invoke-WebRequest -Method Get -Uri https://go.microsoft.com/fwlink/p/?LinkId=323507 -OutFile sdksetup.exe -UseBasicParsing
         Start-Process -Wait sdksetup.exe -ArgumentList "/q", "/norestart", "/features", "OptionId.WindowsDesktopSoftwareDevelopmentKit", "OptionId.NetFxSoftwareDevelopmentKit"
+
+    - name: Install NuGet Packages
+      run: msbuild -t:restore
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
