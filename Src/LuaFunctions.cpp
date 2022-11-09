@@ -5,7 +5,7 @@
 #include "JassMachine.h"
 #include "EasyStormLib/EasyStormLib.h"
 
-#define lua_registerJassNative(L, n, f) (lua_pushstring(L, (n)), lua_pushcclosure(L, (f), 1), lua_setglobal(L, (n)))
+#define lua_registerJassNative(L, n, c, f) (lua_pushstring(L, (n)), lua_pushinteger(L, (DWORD)(c)), lua_pushcclosure(L, (f), 2), lua_setglobal(L, (n)))
 
 std::map<std::string, bool> destroyers = {
 	{"DestroyTimer", true},
@@ -151,7 +151,7 @@ namespace LuaFunctions {
 
 	int lua_invokeNative(lua_State* l) {
 		std::string name = lua_tostring(l, lua_upvalueindex(1));
-		Jass::JASSNATIVE native = Jass::GetNative(name);
+		Jass::JASSNATIVE& native = *(Jass::JASSNATIVE*)lua_tointeger(l, lua_upvalueindex(2));
 
 		if (!native.IsValid()) {
 			return 0;
@@ -161,73 +161,69 @@ namespace LuaFunctions {
 		std::size_t size = paramsTypes.size();
 		std::size_t realsCount = native.GetRealsCount();
 
-		std::vector<UINT> params;
-		params.resize(size + realsCount);
+		UINT* params = new UINT[size + realsCount];
 		UINT i = 1;
 
 		// Lua parameters -> Jass parameters
 		for (const auto& type : native.GetParams()) {
 			if (isupper(type[0])) {
 				switch (type[0]) {
-				case 'C':
-					if (lua_isfunction(l, i)) {
-						params[i - 1] = Jass::ToCode(l, i);
-					}
-					else if (luaL_testudata(l, i, "code")) {
-						params[i - 1] = *(DWORD*)lua_touserdata(l, i);
-					}
-					else {
-						return luaL_typeerror(l, i, "function or code");
-					}
+					case 'C':
+						if (lua_isfunction(l, i)) {
+							params[i - 1] = Jass::ToCode(l, i);
+						}
+						else if (luaL_testudata(l, i, "code")) {
+							params[i - 1] = *(DWORD*)lua_touserdata(l, i);
+						}
+						else {
+							return luaL_typeerror(l, i, "function or code");
+						}
 
-					break;
-				case 'B':
-					if (lua_isboolean(l, i)) {
-						params[i - 1] = (DWORD)lua_toboolean(l, i);
-					}
-					else {
-						return luaL_typeerror(l, i, "boolean");
-					}
+						break;
+					case 'B':
+						if (lua_isboolean(l, i)) {
+							params[i - 1] = (DWORD)lua_toboolean(l, i);
+						}
+						else {
+							return luaL_typeerror(l, i, "boolean");
+						}
 
-					break;
-				case 'I':
-					if (lua_isinteger(l, i)) {
-						params[i - 1] = (DWORD)lua_tointeger(l, i);
-					}
-					/*else if (lua_isstring(l, i) && strlen(lua_tostring(l, i)) == 4) {
-						params[i - 1] = Jass::ToID(lua_tostring(l, i));
-					}*/
-					else {
-						return luaL_typeerror(l, i, "integer");
-					}
+						break;
+					case 'I':
+						if (lua_isinteger(l, i)) {
+							params[i - 1] = (DWORD)lua_tointeger(l, i);
+						}
+						else {
+							return luaL_typeerror(l, i, "integer");
+						}
 
-					break;
-				case 'R': {
-					if (lua_isnumber(l, i)) {
-						--realsCount;
+						break;
+					case 'R': {
+						if (lua_isnumber(l, i)) {
+							--realsCount;
 
-						*(float*)(&params[size + realsCount]) = (float)lua_tonumber(l, i);
-						params[i - 1] = (DWORD)&params[size + realsCount];
-					}
-					else {
-						return luaL_typeerror(l, i, "number");
-					}
+							*(float*)(&params[size + realsCount]) = (float)lua_tonumber(l, i);
+							params[i - 1] = (DWORD)&params[size + realsCount];
+						}
+						else {
+							return luaL_typeerror(l, i, "number");
+						}
 
-					break;
-				}
-				case 'S':
-					if (lua_isstring(l, i)) {
-						params[i - 1] = (UINT)&JassMachine::GetJassMachine()->string_table->GetRCString(Jass::ToString(lua_tostring(l, i)));
+						break;
 					}
-					else {
-						return luaL_typeerror(l, i, "string");
-					}
+					case 'S':
+						if (lua_isstring(l, i)) {
+							params[i - 1] = (UINT)&JassMachine::GetJassMachine()->string_table->GetRCString(Jass::ToString(lua_tostring(l, i)));
+						}
+						else {
+							return luaL_typeerror(l, i, "string");
+						}
 
-					break;
-				default:
-					params[i - 1] = NULL;
+						break;
+					default:
+						params[i - 1] = NULL;
 
-					break;
+						break;
 				}
 			}
 			else {
@@ -266,40 +262,40 @@ namespace LuaFunctions {
 			return luaL_error(l, "player expected positive index, received: %d", params[0]);
 		}
 
-		BOOL result = native.Invoke(params.data(), size);
+		BOOL result = native.Invoke(params, size);
+		delete[] params;
 
 		// Jass return -> Lua return
-		std::string return_type = native.GetReturnType();
+		const std::string& return_type = native.GetReturnType();
 		if (isupper(return_type[0])) {
 			switch (return_type[0]) {
-			case 'B':
-				lua_pushboolean(l, result);
+				case 'B':
+					lua_pushboolean(l, result);
 
-				break;
-			case 'I':
-				lua_pushinteger(l, result);
+					break;
+				case 'I':
+					lua_pushinteger(l, result);
 
-				break;
-			case 'C':
-				lua_pushinteger(l, result);
+					break;
+				case 'C':
+					lua_pushinteger(l, result);
 
-				break;
-			case 'R':
-				lua_pushnumber(l, Jass::FromReal(result));
+					break;
+				case 'R':
+					lua_pushnumber(l, Jass::FromReal(result));
 
-				break;
-			case 'S':
-				lua_pushstring(l, JassMachine::GetJassMachine()->string_table->GetString(result));
-				//lua_pushstring(l, Jass::FromString(JassMachine::GetJassMachine()->string_table->Get(result)));
+					break;
+				case 'S':
+					lua_pushstring(l, JassMachine::GetJassMachine()->string_table->GetString(result));
+					//lua_pushstring(l, Jass::FromString(JassMachine::GetJassMachine()->string_table->Get(result)));
 
-				break;
-			default:
-				return 0;
+					break;
+				default:
+					return 0;
 			}
 		}
 		else {
 			LuaMachine::GetUserdataByHandle(l, result, return_type.c_str());
-			//result ? *(DWORD*)lua_newuserdata(l, sizeof(DWORD)) = result, luaL_setmetatable(l, return_type.c_str()) : lua_pushnil(l);
 		}
 
 		return 1;
@@ -400,8 +396,8 @@ namespace LuaFunctions {
 			}
 		}
 
-		for (const auto& native : Jass::jassnatives) {
-			lua_registerJassNative(l, native.first.c_str(), lua_invokeNative);
+		for (auto& native : Jass::jassnatives) {
+			lua_registerJassNative(l, native.first.c_str(), &native.second, lua_invokeNative);
 		}
 
 		lua_register(l, "IdToString", IdToString);
