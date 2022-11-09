@@ -30,6 +30,7 @@ jobs:
         Start-Process -Wait sdksetup.exe -ArgumentList "/q", "/norestart", "/features", "OptionId.WindowsDesktopSoftwareDevelopmentKit", "OptionId.NetFxSoftwareDevelopmentKit"
 
     - name: Install NuGet Packages
+      working-directory: ${{env.GITHUB_WORKSPACE}}
       run: msbuild -t:restore
 
     - name: Build
