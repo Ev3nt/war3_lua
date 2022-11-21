@@ -24,6 +24,7 @@
 #define WP_LUA_DEV_MODE WP_LUA_CODES + 1
 #define WP_LUA_CONSOLE_MODE WP_LUA_CODES + 2
 #define WP_LUA_DEVCONSOLE_MODE WP_LUA_CODES + 3
+#define WP_LUA_WARNINGS WP_LUA_CODES + 4
 
 namespace Hooks {
 	enum class EventTypes : UINT {
@@ -210,6 +211,12 @@ namespace Hooks {
 						else {
 							Logger::CloseConsole();
 						}
+
+						break;
+					}
+					case WP_LUA_WARNINGS:
+					{
+						disableWarnings != disableWarnings;
 
 						break;
 					}

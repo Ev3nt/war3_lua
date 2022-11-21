@@ -242,8 +242,8 @@ namespace JassMachine {
 		BYTE unk8[0x1C];
 	} JASS_INSTANCE, * PJASS_INSTANCE;
 
-#pragma pack(push)
-#pragma pack(4)
+	#pragma pack(push)
+	#pragma pack(4)
 	struct JASS_NATIVE {
 		uintptr_t vTable; // 0x0
 		uintptr_t unk1; // 0x04
@@ -261,7 +261,7 @@ namespace JassMachine {
 		uintptr_t unk6; // 0x34
 		OPCODE_VARIABLE returnType; // 0x38
 	};
-#pragma pack(pop)
+	#pragma pack(pop)
 
 	typedef struct {
 		uintptr_t vTable; // 0x00
@@ -309,5 +309,5 @@ namespace JassMachine {
 
 	PJASS_VARIABLE GetVariableDataNodeByName(PSCRIPT_DATA_TABLE pDataNode, const std::string& name);
 
-	PJASS_VARIABLE GetVariableDataNodeByNameEx(PJASS_INSTANCE jvm, const std::string& name);
+	PJASS_VARIABLE GetVariableDataNodeByNameEx(PJASS_INSTANCE jassVM, const std::string& name);
 }

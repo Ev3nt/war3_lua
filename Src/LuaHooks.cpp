@@ -331,18 +331,17 @@ namespace LuaHooks {
 		int i;
 
 		for (i = 1; i <= n; i++) {
-			size_t l;
-			LPCSTR s = luaL_tolstring(L, i, &l);
+			LPCSTR s = luaL_tolstring(L, i, NULL);
+			lua_pop(L, 1);
 
 			if (i > 1) {
-				lua_writestring("\t", 1);
+				printf("\t");
 			}
 
-			lua_writestring(s, l);
-			lua_pop(L, 1);
+			Utils::printf(s);
 		}
 
-		lua_writeline();
+		printf("\n");
 
 		return 0;
 	}
@@ -351,17 +350,18 @@ namespace LuaHooks {
 		int n = lua_gettop(L);
 		int i;
 
-		for (i = 1; i <= n; i++) {
-			size_t l;
-			LPCSTR s = luaL_tolstring(L, i, &l);
+		std::string string = "";
 
+		for (i = 1; i <= n; i++) {
 			if (i > 1) {
-				Warcraft::PrintChat("\t", 60.f);
+				string += "\t";
 			}
 
-			Warcraft::PrintChat(luaL_tolstring(L, -1, NULL), 60.f);
+			string += luaL_tolstring(L, i, NULL);
 			lua_pop(L, 1);
 		}
+
+		Warcraft::PrintChat(string.c_str(), 60.f);
 
 		return 0;
 	}

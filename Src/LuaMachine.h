@@ -1,5 +1,7 @@
 #pragma once
 
+#define JASS2LUA "JASS2LUA_WRAPPER"
+
 namespace LuaMachine {
 	extern std::map<std::string, bool> handlemetatypes;
 
@@ -10,10 +12,10 @@ namespace LuaMachine {
 	BOOL __stdcall StartLuaThread();
 
 	void HandleMetatablesReset();
-	BOOL GetGlobalTable(lua_State* l, LPCSTR name, bool weak);
+	BOOL GetGlobalTable(lua_State* l, LPCSTR name, bool weakKey, bool weakValue);
 
-	int PushFunctionRef(lua_State* l, int index);
-	void GetFunctionByRef(lua_State* l, int ref);
+	DWORD PushFunctionByKey(lua_State* l, int index, DWORD key);
+	void GetFunctionByKey(lua_State* l, DWORD key);
 
 	BOOL GetUserdataByHandle(lua_State* l, DWORD handle, LPCSTR tname);
 	void DeleteUserdataByHandle(lua_State* l, DWORD handle);

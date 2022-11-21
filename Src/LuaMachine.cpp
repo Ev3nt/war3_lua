@@ -42,7 +42,6 @@ namespace LuaMachine {
 		if (mainState) {
 			lua_close(mainState);
 			mainState = NULL;
-			Jass::JassOpcodesReset();
 			Jass::JassNativesReset();
 			LuaMachine::HandleMetatablesReset();
 		}
@@ -58,11 +57,12 @@ namespace LuaMachine {
 			lua_pushcfunction(l, stacktrace);
 			lua_getglobal(l, "require");
 			lua_pushstring(l, "war3map");
-			if (lua_pcall(l, 1, LUA_MULTRET, -3) != LUA_OK) {
+			if (lua_pcall(l, 1, 0, -3) != LUA_OK) {
 				lua_throwerr(l);
+				lua_pop(l, 1);
 			}
 
-			lua_pop(l, lua_gettop(l));
+			lua_pop(l, 1);
 		}
 	}
 
@@ -71,9 +71,9 @@ namespace LuaMachine {
 		JassMachine::PJASS_STACK stack = JassVM->stack;
 		BOOL result = TRUE;
 
-		lua_State* l = (lua_State*)stack->Pop()->value; //GetMainState();
+		lua_State* l = GetMainState(false);
 		lua_State* thread = lua_newthread(l);
-		GetFunctionByRef(thread, stack->Pop()->value);
+		GetFunctionByKey(thread, stack->Pop()->value);
 
 		if (!lua_isfunction(thread, -1)) {
 			lua_pushfstring(thread, "Couldn't start the thread. Expected type function, got %s (stack size %d). Contact me at XGM or VK.", lua_typename(l, lua_type(thread, -1)), lua_gettop(thread));
@@ -107,7 +107,7 @@ namespace LuaMachine {
 			result = FALSE;
 		}
 
-		lua_pop(l, lua_gettop(l)); // It should be there, cause gc can dealloc the thread, before code has been done.
+		lua_pop(l, 1); // It should be there, cause gc can dealloc the thread, before code has been done.
 
 		return result;
 	}
@@ -115,21 +115,38 @@ namespace LuaMachine {
 	//----------------------------------------------------------
 
 	void HandleMetatablesReset() {
-		std::map<std::string, bool>().swap(LuaMachine::handlemetatypes);
+		LuaMachine::handlemetatypes.clear();
 	}
 
-	BOOL GetGlobalTable(lua_State* l, LPCSTR name, bool weak) {
+	BOOL GetGlobalTable(lua_State* l, LPCSTR name, bool weakKey, bool weakValue) {
 		lua_getfield(l, LUA_REGISTRYINDEX, name);
 
 		if (!lua_istable(l, -1)) {
 			lua_pop(l, 1);
 			lua_newtable(l);
 
+			BYTE weak = (weakValue << 1) | (BYTE)weakKey;
 			if (weak) {
+				LPCSTR mode;
 				lua_newtable(l);
-				lua_pushstring(l, "__mode");
-				lua_pushstring(l, "kv");
-				lua_rawset(l, -3);
+
+				switch (weak)
+				{
+				case 1:
+					mode = "k";
+
+					break;
+				case 2:
+					mode = "v";
+
+					break;
+				default:
+					mode = "kv";
+				}
+
+				lua_pushstring(l, mode);
+
+				lua_setfield(l, -2, "__mode");
 
 				lua_setmetatable(l, -2);
 			}
@@ -143,23 +160,21 @@ namespace LuaMachine {
 		return TRUE;
 	}
 
-	int PushFunctionRef(lua_State* l, int index) {
-		lua_pushvalue(l, index); // 1 +
-		GetGlobalTable(l, "_LUA_FUNCTIONS_REF", false); // 2 +
+	DWORD PushFunctionByKey(lua_State* l, int index, DWORD key) {
+		GetGlobalTable(l, "_LUA_CALLBACKS", false, true);
 
-		int ref = (int)lua_rawlen(l, -1);
-		lua_pushvalue(l, -2); // 3 +
-		lua_rawseti(l, -2, ++ref); // 2 -
+		lua_pushvalue(l, index);
+		lua_rawseti(l, -2, key);
 
-		lua_pop(l, 2); // 0 -
+		lua_pop(l, 1);
 
-		return ref;
+		return key;
 	}
 
-	void GetFunctionByRef(lua_State* l, int ref) {
-		GetGlobalTable(l, "_LUA_FUNCTIONS_REF", false); // 1 +
-		lua_rawgeti(l, -1, ref); //  2 +
-		lua_remove(l, -2); // 1 -
+	void GetFunctionByKey(lua_State* l, DWORD key) {
+		GetGlobalTable(l, "_LUA_CALLBACKS", false, true);
+		lua_rawgeti(l, -1, key);
+		lua_remove(l, -2);
 	}
 
 	int GetUserdataByHandle(lua_State* l, DWORD handle, LPCSTR tname) {
@@ -170,9 +185,14 @@ namespace LuaMachine {
 		}
 
 		UINT key = (UINT)Warcraft::ConvertHandle(handle);
-		key ? GetGlobalTable(l, "_LUA_WARCRAFT_HANDLES", false) : (GetGlobalTable(l, std::string("_LUA_CONST_").append(tname).c_str(), false), key = handle);
-		lua_pushinteger(l, key);
-		lua_rawget(l, -2);
+		if (key) {
+			GetGlobalTable(l, "_LUA_WARCRAFT_HANDLES", false, false);
+		}
+		else {
+			GetGlobalTable(l, std::string("_LUA_CONST_").append(tname).c_str(), false, false);
+			key = handle;
+		}
+		lua_rawgeti(l, -1, key);
 
 		if (luaL_testudata(l, -1, tname)) {
 			lua_remove(l, -2);
@@ -182,9 +202,8 @@ namespace LuaMachine {
 		else if (lua_isnil(l, -1)) {
 			lua_pop(l, 1);
 			*(DWORD*)lua_newuserdata(l, sizeof(handle)) = handle;
-			lua_pushinteger(l, key);
-			lua_pushvalue(l, -2);
-			lua_rawset(l, -4);
+			lua_pushvalue(l, -1);
+			lua_rawseti(l, -3, key);
 			lua_remove(l, -2);
 		}
 
@@ -194,15 +213,12 @@ namespace LuaMachine {
 	}
 
 	void DeleteUserdataByHandle(lua_State* l, DWORD handle) {
-		GetGlobalTable(l, "_LUA_WARCRAFT_HANDLES", false);
-		lua_pushinteger(l, handle);
-		lua_rawget(l, -2);
+		GetGlobalTable(l, "_LUA_WARCRAFT_HANDLES", false, false);
 
-		if (!lua_isnil(l, -1)) {
-			*(DWORD*)lua_touserdata(l, -1) = NULL;
-			lua_pushinteger(l, handle);
-			lua_pushnil(l);
-			lua_rawset(l, -4);
+		if (lua_rawgeti(l, -1, handle) != LUA_TNIL) {
+			*(DWORD*)lua_touserdata(l, -1) = NULL; // 2
+			lua_pushnil(l); // 3
+			lua_rawseti(l, -3, handle); // 2
 		}
 
 		lua_pop(l, 2);
@@ -212,8 +228,7 @@ namespace LuaMachine {
 
 	void lua_throwerr(lua_State* l) {
 		std::string error = lua_tostring(l, -1);
-		Logger::Log(error, Logger::LEVEL::LOG_ERROR);
-		Warcraft::PrintChat(Utils::format("[|cFFFF0000Error|r] %s", error).c_str(), 100);
+		Warcraft::PrintChat((Logger::Log(error, Logger::LEVEL::LOG_ERROR) + error).c_str(), 100);
 	}
 
 	void lua_throwWarning(lua_State* l, std::string msg) {
@@ -221,8 +236,7 @@ namespace LuaMachine {
 		std::string warning = lua_tostring(l, -1);
 		lua_pop(l, 1);
 
-		Logger::Log(warning, Logger::LEVEL::LOG_WARNING);
-		Warcraft::PrintChat(Utils::format("[|cFFC19C00Warning|r] %s", warning).c_str(), 100);
+		Warcraft::PrintChat((Logger::Log(warning, Logger::LEVEL::LOG_WARNING) + warning).c_str(), 100);
 	}
 
 	int stacktrace(lua_State* L) {

@@ -48,7 +48,7 @@ namespace Jass {
 		return (PCSTR)((UINT*)string)[7];
 	}
 
-	UINT ToCode(lua_State* l, int index);
+	UINT ToCode(lua_State* l, int index, int keyIndex);
 
 	inline DWORD ToID(LPCSTR lpID) {
 		return (lpID[0] << 24) + (lpID[1] << 16) + (lpID[2] << 8) + lpID[3];
@@ -81,7 +81,6 @@ namespace Jass {
 
 	void JassNativesParse();
 	void JassNativesReset();
-	void JassOpcodesReset();
 
 	//---------------------------------------------------------
 

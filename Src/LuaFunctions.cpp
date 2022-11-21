@@ -170,7 +170,7 @@ namespace LuaFunctions {
 				switch (type[0]) {
 					case 'C':
 						if (lua_isfunction(l, i)) {
-							params[i - 1] = Jass::ToCode(l, i);
+							params[i - 1] = Jass::ToCode(l, i, 1);
 						}
 						else if (luaL_testudata(l, i, "code")) {
 							params[i - 1] = *(DWORD*)lua_touserdata(l, i);
@@ -232,16 +232,21 @@ namespace LuaFunctions {
 						return luaL_typeerror(l, i, type.c_str());
 					}
 
-					if (developerMode) {
-						std::string metatype = std::string(lua_tostring(l, -1));
+					
+					std::string metatype = std::string(lua_tostring(l, -1));
 
-						if (!IsChild(type, metatype)) {
-							luaL_where(l, 1);
-							std::string where = lua_tostring(l, -1);
-							lua_pop(l, 1);
+					if (!IsChild(type, metatype)) {
+						if (metatype == "handle") {
+							if (developerMode && !disableWarnings) {
+								luaL_where(l, 1);
+								std::string where = lua_tostring(l, -1);
+								lua_pop(l, 1);
 
-							LuaMachine::lua_throwWarning(l, Utils::format("%s bad argument #%d to '%s' (%s expected, got %s)", where.c_str(), i, name.c_str(), type.c_str(), metatype.c_str()));
-
+								LuaMachine::lua_throwWarning(l, Utils::format("%sbad argument #%d to '%s' (%s expected, got %s)", where.c_str(), i, name.c_str(), type.c_str(), metatype.c_str()));
+							}
+						}
+						else {
+							return luaL_typeerror(l, i, type.c_str());
 						}
 					}
 
@@ -253,13 +258,16 @@ namespace LuaFunctions {
 
 					params[i - 1] = *(DWORD*)lua_touserdata(l, i);
 				}
+				else {
+					params[i - 1] = NULL;
+				}
 			}
 
 			i++;
 		}
 
-		if (name == "Player" && (int)params[0] < 0) {
-			return luaL_error(l, "player expected positive index, received: %d", params[0]);
+		if (name == "Player" && params[0] > 15) {
+			return luaL_error(l, "player expected index from 0 to 15, received: %d", params[0]);
 		}
 
 		BOOL result = native.Invoke(params, size);
@@ -367,19 +375,23 @@ namespace LuaFunctions {
 		return 1;
 	}
 
-	/*int IsHandleExists(lua_State* l) {
-		if (lua_isuserdata(l, 1)) {
-			lua_pushboolean(l, *(DWORD*)lua_touserdata(l, 1) != NULL);
-		}
-		else {
-			return luaL_typeerror(l, 1, "handle");
-		}
+	int lua_jassoplistgc(lua_State* l) {
+		lua_getfield(l, 1, "oplist");
+		delete (JassMachine::JASS_OPLIST*)lua_touserdata(l, -1);
+		lua_pop(l, 1);
 
-		return 1;
-	}*/
+		return 0;
+	}
 
 	void lua_openJassNatives(lua_State* l) {
 		Jass::JassNativesParse();
+
+		if (luaL_newmetatable(l, JASS2LUA)) {
+			lua_pushcfunction(l, lua_jassoplistgc);
+			lua_setfield(l, -2, "__gc");
+		}
+
+		lua_pop(l, 1);
 
 		for (const auto& type : LuaMachine::handlemetatypes) {
 			if (luaL_newmetatable(l, type.first.c_str())) {
@@ -403,49 +415,48 @@ namespace LuaFunctions {
 		lua_register(l, "IdToString", IdToString);
 		lua_register(l, "StringToId", StringToId);
 		lua_register(l, "FourCC", FourCC);
-		//lua_register(l, "IsHandleExists", IsHandleExists);
 	}
 
 	int lua_getJassArrayElement(lua_State* l) {
 		luaL_getmetafield(l, 1, "array");
-		JassMachine::PJASS_VARIABLE var = (JassMachine::PJASS_VARIABLE)lua_tointeger(l, -1);
+		JassMachine::PJASS_VARIABLE variable = (JassMachine::PJASS_VARIABLE)lua_tointeger(l, -1);
 		lua_pop(l, 1);
 
-		if (!var) {
+		if (!variable) {
 			return 0;
 		}
 
-		JassMachine::PJASS_ARRAY arr = (JassMachine::PJASS_ARRAY)var->value;
+		JassMachine::PJASS_ARRAY jarray = (JassMachine::PJASS_ARRAY)variable->value;
 		UINT index = (UINT)lua_tointeger(l, 2);
 
-		if (index >= arr->list.max) {
+		if (index >= jarray->list.max) {
 			return 0;
 		}
 
-		switch ((OPCODE_VARIABLE)var->retType)
+		switch ((OPCODE_VARIABLE)variable->retType)
 		{
 			case OPCODE_VARIABLE::TYPE_INTEGER_ARRAY: {
-				lua_pushinteger(l, arr->list.value[index]);
+				lua_pushinteger(l, jarray->list.value[index]);
 
 				break;
 			}
 			case OPCODE_VARIABLE::TYPE_REAL_ARRAY: {
-				lua_pushnumber(l, Jass::FromReal(arr->list.value[index]));
+				lua_pushnumber(l, Jass::FromReal(jarray->list.value[index]));
 
 				break;
 			}
 			case OPCODE_VARIABLE::TYPE_STRING_ARRAY: {
-				lua_pushstring(l, JassMachine::GetJassMachine()->string_table->GetString(arr->list.value[index]));
+				lua_pushstring(l, JassMachine::GetJassMachine()->string_table->GetString(jarray->list.value[index]));
 
 				break;
 			}
 			case OPCODE_VARIABLE::TYPE_HANDLE_ARRAY: {
-				LuaMachine::GetUserdataByHandle(l, arr->list.value[index], "handle");
+				LuaMachine::GetUserdataByHandle(l, jarray->list.value[index], "handle");
 
 				break;
 			}
 			case OPCODE_VARIABLE::TYPE_BOOLEAN_ARRAY: {
-				lua_pushboolean(l, arr->list.value[index]);
+				lua_pushboolean(l, jarray->list.value[index]);
 
 				break;
 			}
@@ -462,64 +473,64 @@ namespace LuaFunctions {
 
 	int lua_getJassArrayLenght(lua_State* l) {
 		luaL_getmetafield(l, 1, "array");
-		JassMachine::PJASS_VARIABLE var = (JassMachine::PJASS_VARIABLE)lua_tointeger(l, -1);
+		JassMachine::PJASS_VARIABLE variable = (JassMachine::PJASS_VARIABLE)lua_tointeger(l, -1);
 		lua_pop(l, 1);
 
-		if (!var) {
+		if (!variable) {
 			return 0;
 		}
 
-		lua_pushinteger(l, ((JassMachine::PJASS_ARRAY)var->value)->list.max);
+		lua_pushinteger(l, ((JassMachine::PJASS_ARRAY)variable->value)->list.max);
 
 		return 1;
 	}
 
 	int lua_getJassVariable(lua_State* l) {
-		JassMachine::PJASS_INSTANCE jvm = JassMachine::GetJassMachine();
-		if (!jvm) {
+		JassMachine::PJASS_INSTANCE jassVM = JassMachine::GetJassMachine();
+		if (!jassVM) {
 			return 0;
 		}
 
-		JassMachine::PJASS_VARIABLE var = JassMachine::GetVariableDataNodeByName(jvm->script_table, lua_tostring(l, 2));
+		JassMachine::PJASS_VARIABLE variable = JassMachine::GetVariableDataNodeByName(jassVM->script_table, lua_tostring(l, 2));
 
-		if (!var) {
+		if (!variable) {
 			return 0;
 		}
 
-		OPCODE_VARIABLE type = (OPCODE_VARIABLE)var->retType;
+		OPCODE_VARIABLE type = (OPCODE_VARIABLE)variable->retType;
 		if (type < OPCODE_VARIABLE::TYPE_INTEGER_ARRAY) {
 			switch (type)
 			{
 				case OPCODE_VARIABLE::TYPE_CODE: {
-					LuaMachine::GetUserdataByHandle(l, var->value, "code");
+					LuaMachine::GetUserdataByHandle(l, variable->value, "code");
 
-				break;
-			}
+					break;
+				}
 				case OPCODE_VARIABLE::TYPE_INTEGER: {
-					lua_pushinteger(l, var->value);
+					lua_pushinteger(l, variable->value);
 
-				break;
-			}
+					break;
+				}
 				case OPCODE_VARIABLE::TYPE_REAL: {
-					lua_pushnumber(l, Jass::FromReal(var->value));
+					lua_pushnumber(l, Jass::FromReal(variable->value));
 
-				break;
-			}
+					break;
+				}
 				case OPCODE_VARIABLE::TYPE_STRING: {
-					lua_pushstring(l, JassMachine::GetJassMachine()->string_table->GetString(var->value));
+					lua_pushstring(l, JassMachine::GetJassMachine()->string_table->GetString(variable->value));
 
-				break;
-			}
+					break;
+				}
 				case OPCODE_VARIABLE::TYPE_HANDLE: {
-				LuaMachine::GetUserdataByHandle(l, var->value, "handle");
+					LuaMachine::GetUserdataByHandle(l, variable->value, "handle");
 
-				break;
-			}
+					break;
+				}
 				case OPCODE_VARIABLE::TYPE_BOOLEAN: {
-					lua_pushboolean(l, var->value);
+					lua_pushboolean(l, variable->value);
 
-				break;
-			}
+					break;
+				}
 
 				default: {
 					lua_pushnil(l);
@@ -532,7 +543,8 @@ namespace LuaFunctions {
 			lua_newtable(l);
 
 			lua_newtable(l);
-			lua_pushinteger(l, (DWORD)var);
+
+			lua_pushinteger(l, (DWORD)variable);
 			lua_setfield(l, -2, "array");
 			// __index
 			lua_pushcfunction(l, lua_getJassArrayElement);

@@ -5,31 +5,55 @@
 
 namespace Jass {
 	std::unordered_map<std::string, JASSNATIVE> jassnatives;
-	std::unordered_map<DWORD, JassMachine::JASS_OPLIST> jassopcodes;
 
 	//---------------------------------------------------------
 
-	UINT ToCode(lua_State* l, int index) {
-		DWORD key = (DWORD)lua_topointer(l, index);
-		
-		auto it = jassopcodes.find(key);
+	UINT ToCode(lua_State* l, int index, int keyIndex) {
+		LuaMachine::GetGlobalTable(l, "_LUA_WARCRAFT_CODES", true, false);
+		lua_pushvalue(l, keyIndex);
 
-		if (it != jassopcodes.end()) {
-			return it->second.GetCode();
+		if (lua_rawget(l, -2) == LUA_TNIL) {
+			lua_pop(l, 1);
+
+			lua_newtable(l);
+			lua_pushvalue(l, keyIndex);
+			lua_pushvalue(l, -2);
+			lua_rawset(l, -4);
 		}
 
-		JassMachine::JASS_OPLIST& oplist = jassopcodes[key];
+		JassMachine::JASS_OPLIST* oplist;
+		DWORD key = (DWORD)lua_topointer(l, index);
+		if (lua_rawgeti(l, -1, key) == LUA_TNIL) {
+			lua_pop(l, 1);
 
-		BYTE reg = 0xD8;
-		oplist.AddOperation(OPCODE_TYPE::MOVRLITERAL, reg, LuaMachine::PushFunctionRef(l, index), OPCODE_VARIABLE::TYPE_INTEGER);
-		oplist.AddOperation(OPCODE_TYPE::PUSH, reg);
-		oplist.AddOperation(OPCODE_TYPE::MOVRLITERAL, reg, (DWORD)l, OPCODE_VARIABLE::TYPE_INTEGER);
-		oplist.AddOperation(OPCODE_TYPE::PUSH, reg);
-		oplist.AddOperation(OPCODE_TYPE::STARTLUATHREAD);
-		oplist.AddOperation(OPCODE_TYPE::MOVRR);
-		oplist.AddOperation(OPCODE_TYPE::RETURN);
+			lua_newtable(l);
+			lua_pushvalue(l, -1);
+			lua_rawseti(l, -3, key);
 
-		return oplist.GetCode();
+			lua_pushvalue(l, index);
+			lua_setfield(l, -2, "callback");
+
+			oplist = new JassMachine::JASS_OPLIST;
+
+			BYTE reg = 0xD8;
+			oplist->AddOperation(OPCODE_TYPE::MOVRLITERAL, reg, LuaMachine::PushFunctionByKey(l, index, key), OPCODE_VARIABLE::TYPE_INTEGER);
+			oplist->AddOperation(OPCODE_TYPE::PUSH, reg);
+			oplist->AddOperation(OPCODE_TYPE::STARTLUATHREAD);
+			oplist->AddOperation(OPCODE_TYPE::MOVRR);
+			oplist->AddOperation(OPCODE_TYPE::RETURN);
+
+			lua_pushlightuserdata(l, oplist);
+			lua_setfield(l, -2, "oplist");
+
+			luaL_setmetatable(l, JASS2LUA);
+		}
+
+		lua_getfield(l, -1, "oplist");
+		oplist = (JassMachine::JASS_OPLIST*)lua_touserdata(l, -1);
+		lua_pop(l, 4);
+
+
+		return oplist->GetCode();
 	}
 
 	//---------------------------------------------------------
@@ -143,10 +167,6 @@ namespace Jass {
 	}
 
 	void JassNativesReset() {
-		std::unordered_map<std::string, JASSNATIVE>().swap(jassnatives);
-	}
-
-	void JassOpcodesReset() {
-		jassopcodes.clear();
+		jassnatives.clear();
 	}
 }

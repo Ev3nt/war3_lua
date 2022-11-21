@@ -70,43 +70,43 @@ namespace Logger {
 		SetConsoleCursorPosition(hStdOut, homeCoords);
 	}
 
-	void Log(std::string info, LEVEL level) {
-		HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-		WORD color = NULL;
-		LPCSTR text = NULL;
+	std::string Log(std::string info, LEVEL level) {
+		std::string message;
+		std::string color;
 
 		switch (level)
 		{
 		case LEVEL::LOG_INFO:
-			color |= FOREGROUND_GREEN;
-			text = "Info";
+			message = "INFO";
+			color = "33FF33";
 
 			break;
 		case LEVEL::LOG_ERROR:
-			color |= FOREGROUND_RED;
-			text = "Error";
+			message = "ERROR";
+			color = "CC0033";
 
 			break;
 		case LEVEL::LOG_DEBUG:
-			color |= FOREGROUND_BLUE;
-			text = "Debug";
+			message = "DEBUG";
+			color = "00CCFF";
 
 			break;
 		case LEVEL::LOG_WARNING:
-			color |= FOREGROUND_RED | FOREGROUND_GREEN;
-			text = "Warning";
+			message = "WARNING";
+			color = "FF9933";
 
 			break;
 		}
 
-		if (text) {
-			std::cout << "[";
-			SetConsoleTextAttribute(console, color);
-			std::cout << text;
-			SetConsoleTextAttribute(console, 15);
-			std::cout << "] ";
+		if (!color.empty()) {
+			//info = "[|cFF" + color + message + "|r] " + info;
+			SYSTEMTIME time;
+			GetLocalTime(&time);
+			info = Utils::format("[%02d:%02d:%02d] [|cFF%s%s|r]: %s", time.wHour, time.wMinute, time.wSecond, color.c_str(), message.c_str(), info.c_str());
 		}
 
-		std::cout << info << std::endl;
+		Utils::printf("%s\n", info.c_str());
+
+		return info;
 	}
 }

@@ -4,11 +4,9 @@
 #include "Offsets.h"
 #include "Hooks.h"
 #include "Logger.h"
-//#include "EasterEgg.h"
 
 bool developerMode = false;
-//SYSTEMTIME date;
-//std::string celebratingText;
+bool disableWarnings = false;
 
 bool StartUp();
 
@@ -56,6 +54,10 @@ bool StartUp() {
 
 	if (strstr(&cmdline[i + 1], "-dev")) {
 		developerMode = true;
+	}
+
+	if (strstr(&cmdline[i + 1], "-nowarnings")) {
+		disableWarnings = true;
 	}
 
 	if (strstr(&cmdline[i + 1], "-console") || strstr(&cmdline[i + 1], "-debug")) {
