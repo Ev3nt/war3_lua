@@ -311,14 +311,18 @@ namespace LuaFunctions {
 
 	//--------------------------------------------------------
 
-	/*int lua_handleequal(lua_State* l) {
-		PDWORD param1 = (PDWORD)lua_touserdata(l, 1);
-		PDWORD param2 = (PDWORD)lua_touserdata(l, 2);
+	int lua_handleequal(lua_State* l) {
+		luaL_getmetafield(l, 1, "__name");
+		std::string metatype1 = lua_tostring(l, -1);
+		luaL_getmetafield(l, 2, "__name");
+		std::string metatype2 = lua_tostring(l, -1);
 
-		lua_pushboolean(l, (param1 ? *param1 : NULL) == (param2 ? *param2 : NULL));
+		lua_pop(l, 2);
+
+		lua_pushboolean(l, metatype1 == "handle" || metatype2 == "handle" ? *(DWORD*)lua_touserdata(l, 1) == *(DWORD*)lua_touserdata(l, 2) : FALSE);
 
 		return 1;
-	}*/
+	}
 
 	int lua_handletostring(lua_State* l) {
 		luaL_getmetafield(l, 1, "__name");
@@ -395,8 +399,8 @@ namespace LuaFunctions {
 
 		for (const auto& type : LuaMachine::handlemetatypes) {
 			if (luaL_newmetatable(l, type.first.c_str())) {
-				/*lua_pushcfunction(l, lua_handleequal);
-				lua_setfield(l, -2, "__eq");*/
+				lua_pushcfunction(l, lua_handleequal);
+				lua_setfield(l, -2, "__eq");
 
 				lua_pushcfunction(l, lua_handletostring);
 				lua_setfield(l, -2, "__tostring");

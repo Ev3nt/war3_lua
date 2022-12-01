@@ -216,7 +216,7 @@ namespace Hooks {
 					}
 					case WP_LUA_WARNINGS:
 					{
-						disableWarnings != disableWarnings;
+						disableWarnings = !disableWarnings;
 
 						break;
 					}
