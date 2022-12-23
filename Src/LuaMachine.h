@@ -12,6 +12,7 @@ namespace LuaMachine {
 	BOOL __stdcall StartLuaThread();
 
 	void HandleMetatablesReset();
+	// Returns TRUE if table exists and FALSE if table was created
 	BOOL GetGlobalTable(lua_State* l, LPCSTR name, bool weakKey, bool weakValue);
 
 	DWORD PushFunctionByKey(lua_State* l, int index, DWORD key);

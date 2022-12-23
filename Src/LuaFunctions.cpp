@@ -416,7 +416,7 @@ namespace LuaFunctions {
 				for (auto& native : Jass::jassnatives) {
 					if (!native.second.GetParams().empty()) {
 
-						std::string firstArgType = native.second.GetParams()[0];
+						 const std::string& firstArgType = native.second.GetParams()[0];
 						
 						if (IsChild(firstArgType, type.first)) {
 							lua_pushJassNative(l, native.first.c_str(), &native.second, lua_invokeNative);
