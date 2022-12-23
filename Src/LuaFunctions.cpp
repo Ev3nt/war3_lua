@@ -311,6 +311,96 @@ namespace LuaFunctions {
 	}
 
 	//--------------------------------------------------------
+	// Handle as table call 
+
+	int lua_getHandleKey(lua_State* l) {
+
+		// 1 - handle
+		// 2 - key
+
+		LuaMachine::GetGlobalTable(l, "__HANDLE_KEY_STORAGE__", true, false); // Table
+
+		lua_pushvalue(l, 1);
+		lua_rawget(l, -2);
+
+		if (lua_isnil(l, -1) == 1) {
+			// No value
+
+			lua_pushvalue(l, 2);
+			lua_rawget(l, lua_upvalueindex(1));
+
+			if (lua_isnil(l, -1) == 1) {
+				// No value, no native
+
+				lua_pop(l, 3);
+
+				lua_pushnil(l);
+				return 1;
+			}
+			else {
+				// No value, have native
+
+				const char *callNativeName = lua_tostring(l, 2);
+
+				lua_pop(l, 3);
+
+				lua_getglobal(l, callNativeName);
+				return 1;
+			}
+		}
+		else {
+			// Have table with value
+
+			lua_pushvalue(l, 2);
+			lua_rawget(l, -2);
+
+			if (lua_isnil(l, -1) == 1) {
+				// No value, get native
+				
+				lua_pop(l, 1);
+
+				const char *callNativeName = lua_tostring(l, 2);
+				lua_getglobal(l, callNativeName);
+			}
+
+			lua_insert(l, 3);
+			lua_pop(l, 2);
+
+			return 1;
+		}
+
+		return 0;
+	}
+
+	int lua_setHandleKey(lua_State* l) {
+		// 1 - arg handle
+		// 2 - arg key
+		// 3 - arg value
+
+		LuaMachine::GetGlobalTable(l, "__HANDLE_KEY_STORAGE__", true, true); // 4 -  Global table
+
+		lua_pushvalue(l, 1);
+		lua_rawget(l, -2);
+
+		if (lua_isnil(l, -1) == 1) {
+			lua_pop(l, 1);
+			lua_newtable(l);
+		}
+
+		lua_pushvalue(l, 2); // arg key
+		lua_pushvalue(l, 3); // arg value
+		lua_rawset(l, -3);
+
+		lua_pushvalue(l, 1); // arg handle
+		lua_pushvalue(l, -2); // handle table
+		lua_rawset(l, 4);
+
+		lua_pop(l, 2);
+
+		return 0;
+	}
+
+	//--------------------------------------------------------
 
 	int lua_handleequal(lua_State* l) {
 		luaL_getmetafield(l, 1, "__name");
@@ -416,7 +506,7 @@ namespace LuaFunctions {
 				for (auto& native : Jass::jassnatives) {
 					if (!native.second.GetParams().empty()) {
 
-						 const std::string& firstArgType = native.second.GetParams()[0];
+						const std::string& firstArgType = native.second.GetParams()[0];
 						
 						if (IsChild(firstArgType, type.first)) {
 							lua_pushJassNative(l, native.first.c_str(), &native.second, lua_invokeNative);
@@ -425,7 +515,11 @@ namespace LuaFunctions {
 					}
 				}
 
+				lua_pushcclosure(l, lua_getHandleKey, 1);
 				lua_setfield(l, -2, "__index");
+
+				lua_pushcclosure(l, lua_setHandleKey, 0);
+				lua_setfield(l, -2, "__newindex");
 
 				lua_pop(l, 1);
 			}
@@ -437,7 +531,7 @@ namespace LuaFunctions {
 
 		lua_register(l, "IdToString", IdToString);
 		lua_register(l, "StringToId", StringToId);
-		lua_register(l, "FourCC", FourCC);
+		lua_register(l, "FourCC", FourCC);		
 	}
 
 	int lua_getJassArrayElement(lua_State* l) {
