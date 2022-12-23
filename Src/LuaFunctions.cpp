@@ -6,6 +6,7 @@
 #include "EasyStormLib/EasyStormLib.h"
 
 #define lua_registerJassNative(L, n, c, f) (lua_pushstring(L, (n)), lua_pushinteger(L, (DWORD)(c)), lua_pushcclosure(L, (f), 2), lua_setglobal(L, (n)))
+#define lua_pushJassNative(L, n, c, f) (lua_pushstring(L, (n)), lua_pushinteger(L, (DWORD)(c)), lua_pushcclosure(L, (f), 2))
 
 std::map<std::string, bool> destroyers = {
 	{"DestroyTimer", true},
@@ -407,6 +408,24 @@ namespace LuaFunctions {
 
 				lua_pushboolean(l, false);
 				lua_setfield(l, -2, "__metatable");
+
+				// Collect natives with the corresponding first argument
+
+				lua_newtable(l);
+
+				for (auto& native : Jass::jassnatives) {
+					if (!native.second.GetParams().empty()) {
+
+						std::string firstArgType = native.second.GetParams()[0];
+						
+						if (IsChild(firstArgType, type.first)) {
+							lua_pushJassNative(l, native.first.c_str(), &native.second, lua_invokeNative);
+							lua_setfield(l, -2, native.first.c_str());
+						}
+					}
+				}
+
+				lua_setfield(l, -2, "__index");
 
 				lua_pop(l, 1);
 			}
