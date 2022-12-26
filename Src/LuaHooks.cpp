@@ -394,19 +394,15 @@ namespace LuaHooks {
 	int luaB_type(lua_State* l) {
 		int t = lua_type(l, 1);
 		luaL_argcheck(l, t != LUA_TNONE, 1, "value expected");
-		if (t == LUA_TUSERDATA) {
-			if (lua_getmetatable(l, 1) && luaL_getmetafield(l, 1, "__metatable") == LUA_TSTRING) {
-				lua_remove(l, 2);
 
-				if (luaL_testudata(l, 1, lua_tostring(l, 2))) {
-					return 1;
-				}
-
+		if (t == LUA_TUSERDATA && luaL_getmetafield(l, 1, "__metatable") == LUA_TBOOLEAN) {
 				lua_pop(l, 1);
-			}
-		}
 
-		lua_pushstring(l, lua_typename(l, t));
+				luaL_getmetafield(l, 1, "__name");
+		}
+		else {
+			lua_pushstring(l, lua_typename(l, t));
+		}
 
 		return 1;
 	}
