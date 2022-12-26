@@ -356,13 +356,12 @@ namespace LuaFunctions {
 			lua_pushvalue(l, 2);
 			lua_rawget(l, -2);
 
-			if (lua_isnil(l, -1) == 1) {
+			if (lua_isnil(l, -1)) {
 				// No value, get native
-				
+
 				lua_pop(l, 1);
 
-				const char *callNativeName = lua_tostring(l, 2);
-				lua_getglobal(l, callNativeName);
+				lua_isstring(l, 2) ? (void)lua_getglobal(l, lua_tostring(l, 2)) : lua_pushnil(l);
 			}
 
 			lua_insert(l, 3);
