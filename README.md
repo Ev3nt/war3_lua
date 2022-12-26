@@ -1,6 +1,5 @@
 # War3 Lua - 1.3.6 (<span style="color: #53377A">Blight</span>)
 
-[![build](https://github.com/Ev3nt/war3_lua/actions/workflows/build.yml/badge.svg)](https://github.com/Ev3nt/war3_lua/actions/workflows/build.yml)
 ![lua](https://img.shields.io/badge/lua-v5.4.4-blue)
 ![warcraft](https://img.shields.io/badge/warcraft-1.24e/1.26a/1.27a/1.27b/1.28f-darkgreen)
 ![license](https://img.shields.io/github/license/Ev3nt/war3_lua?color=green)
