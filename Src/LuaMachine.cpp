@@ -72,8 +72,19 @@ namespace LuaMachine {
 		BOOL result = TRUE;
 
 		lua_State* l = GetMainState(false);
-		lua_State* thread = lua_newthread(l);
-		GetFunctionByKey(thread, stack->Pop()->value);
+		GetFunctionByKey(l, stack->Pop()->value);
+		GetGlobalTable(l, "_LUA_THREADS", true, false);
+		lua_pushvalue(l, -2);
+		if (lua_rawget(l, -2) != LUA_TTHREAD) {
+			lua_pop(l, 1);
+			lua_newthread(l);
+			lua_pushvalue(l, -3);
+			lua_pushvalue(l, -2);
+			lua_rawset(l, -4);
+		}
+		lua_State* thread = lua_tothread(l, -1);
+		lua_pop(l, 2);
+		lua_xmove(l, thread, 1);
 
 		if (!lua_isfunction(thread, -1)) {
 			lua_pushfstring(thread, "Couldn't start the thread. Expected type function, got %s (stack size %d). Contact me at XGM or VK.", lua_typename(l, lua_type(thread, -1)), lua_gettop(thread));
@@ -106,8 +117,6 @@ namespace LuaMachine {
 
 			result = FALSE;
 		}
-
-		lua_pop(l, 1); // It should be there, cause gc can dealloc the thread, before code has been done.
 
 		return result;
 	}
