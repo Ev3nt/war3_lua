@@ -151,7 +151,7 @@ namespace LuaFunctions {
 	// JassNatives
 
 	int lua_invokeNative(lua_State* l) {
-		std::string name = lua_tostring(l, lua_upvalueindex(1));
+		const std::string name = lua_tostring(l, lua_upvalueindex(1));
 		Jass::JASSNATIVE& native = *(Jass::JASSNATIVE*)lua_tointeger(l, lua_upvalueindex(2));
 
 		if (!native.IsValid()) {
@@ -230,11 +230,10 @@ namespace LuaFunctions {
 			else {
 				if (!lua_isnil(l, i)) {
 					if (luaL_getmetafield(l, i, "__name") != LUA_TSTRING) {
-						return luaL_typeerror(l, i, type.c_str());
+						return luaL_typeerror(l, i, type.data());
 					}
 
-					
-					std::string metatype = std::string(lua_tostring(l, -1));
+					std::string metatype = lua_tostring(l, -1);
 
 					if (!IsChild(type, metatype)) {
 						if (metatype == "handle") {
@@ -243,18 +242,18 @@ namespace LuaFunctions {
 								std::string where = lua_tostring(l, -1);
 								lua_pop(l, 1);
 
-								LuaMachine::lua_throwWarning(l, Utils::format("%sbad argument #%d to '%s' (%s expected, got %s)", where.c_str(), i, name.c_str(), type.c_str(), metatype.c_str()));
+								LuaMachine::lua_throwWarning(l, Utils::format("%sbad argument #%d to '%s' (%s expected, got %s)", where.data(), i, name.data(), type.data(), metatype.data()));
 							}
 						}
 						else {
-							return luaL_typeerror(l, i, type.c_str());
+							return luaL_typeerror(l, i, type.data());
 						}
 					}
 
 					lua_pop(l, 1);
 
 					if (luaL_testudata(l, i, "code")) {
-						return luaL_typeerror(l, i, type.c_str());
+						return luaL_typeerror(l, i, type.data());
 					}
 
 					params[i - 1] = *(DWORD*)lua_touserdata(l, i);
@@ -304,7 +303,7 @@ namespace LuaFunctions {
 			}
 		}
 		else {
-			LuaMachine::GetUserdataByHandle(l, result, return_type.c_str());
+			LuaMachine::GetUserdataByHandle(l, result, return_type.data());
 		}
 
 		return 1;
@@ -318,7 +317,7 @@ namespace LuaFunctions {
 		// 1 - handle
 		// 2 - key
 
-		LuaMachine::GetGlobalTable(l, "__HANDLE_KEY_STORAGE__", true, false); // Table
+		LuaMachine::GetGlobalTable(l, "_HANDLE_KEY_STORAGE", true, false); // Table
 
 		lua_pushvalue(l, 1);
 		lua_rawget(l, -2);
@@ -378,7 +377,7 @@ namespace LuaFunctions {
 		// 2 - arg key
 		// 3 - arg value
 
-		LuaMachine::GetGlobalTable(l, "__HANDLE_KEY_STORAGE__", true, true); // 4 -  Global table
+		LuaMachine::GetGlobalTable(l, "_HANDLE_KEY_STORAGE", true, true); // 4 -  Global table
 
 		lua_pushvalue(l, 1);
 		lua_rawget(l, -2);
@@ -427,7 +426,7 @@ namespace LuaFunctions {
 
 		lua_pop(l, 1);
 	
-		lua_pushstring(l, string.c_str());
+		lua_pushstring(l, string.data());
 	
 		return 1;
 	}
@@ -490,7 +489,7 @@ namespace LuaFunctions {
 		lua_pop(l, 1);
 
 		for (const auto& type : LuaMachine::handlemetatypes) {
-			if (luaL_newmetatable(l, type.first.c_str())) {
+			if (luaL_newmetatable(l, type.first.data())) {
 				lua_pushcfunction(l, lua_handleequal);
 				lua_setfield(l, -2, "__eq");
 
@@ -510,8 +509,8 @@ namespace LuaFunctions {
 						const std::string& firstArgType = native.second.GetParams()[0];
 						
 						if (IsChild(firstArgType, type.first)) {
-							lua_pushJassNative(l, native.first.c_str(), &native.second, lua_invokeNative);
-							lua_setfield(l, -2, native.first.c_str());
+							lua_pushJassNative(l, native.first.data(), &native.second, lua_invokeNative);
+							lua_setfield(l, -2, native.first.data());
 						}
 					}
 				}
@@ -527,7 +526,7 @@ namespace LuaFunctions {
 		}
 
 		for (auto& native : Jass::jassnatives) {
-			lua_registerJassNative(l, native.first.c_str(), &native.second, lua_invokeNative);
+			lua_registerJassNative(l, native.first.data(), &native.second, lua_invokeNative);
 		}
 
 		lua_register(l, "IdToString", IdToString);
@@ -732,7 +731,7 @@ namespace LuaFunctions {
 				pathSlash != std::string::npos ? name = name.substr(pathSlash + 1) : NULL;
 			}
 
-			lua_pushstring(l, name.c_str());
+			lua_pushstring(l, name.data());
 		}
 		else {
 			return luaL_typeerror(l, 1, "boolean");

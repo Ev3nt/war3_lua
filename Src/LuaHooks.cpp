@@ -45,10 +45,10 @@ namespace LuaHooks {
 
 		std::string script = map[scriptName];
 		if (!script.empty()) {
-			return checkload(l, (luaL_loadbuffer(l, script.c_str(), script.size(), ("@" + scriptPath).c_str()) == LUA_OK), scriptName.c_str());
+			return checkload(l, (luaL_loadbuffer(l, script.data(), script.size(), ("@" + scriptPath).data()) == LUA_OK), scriptName.data());
 		}
 
-		lua_pushstring(l, ("no file '" + scriptPath + "'").c_str());
+		lua_pushstring(l, ("no file '" + scriptPath + "'").data());
 
 		return 1;
 	}
@@ -58,9 +58,9 @@ namespace LuaHooks {
 	}
 
 	int luaL_loadbufferasfile(lua_State* l, LPCSTR buffer, size_t size, std::string name, LPCSTR mode = NULL) {
-		int status = luaL_loadbufferx(l, buffer, size, ("@" + name).c_str(), mode);
+		int status = luaL_loadbufferx(l, buffer, size, ("@" + name).data(), mode);
 
-		!size ? lua_pop(l, 1), lua_pushfstring(l, "cannot open %s: No such file or directory", name.c_str()) : NULL; // strerror(2)
+		!size ? lua_pop(l, 1), lua_pushfstring(l, "cannot open %s: No such file or directory", name.data()) : NULL; // strerror(2)
 
 		return size ? status : LUA_ERRFILE;
 	}
@@ -78,11 +78,11 @@ namespace LuaHooks {
 		}
 
 		std::string script = map[scriptName];
-		if (luaL_loadbufferasfile(l, script.c_str(), script.size(), ("(" + mapPath + "):\\" + scriptName)) != LUA_OK) {
+		if (luaL_loadbufferasfile(l, script.data(), script.size(), ("(" + mapPath + "):\\" + scriptName)) != LUA_OK) {
 			if (developerMode) {
 				lua_pop(l, 1);
 
-				if (luaL_loadfile(l, scriptName.c_str()) != LUA_OK) {
+				if (luaL_loadfile(l, scriptName.data()) != LUA_OK) {
 					return lua_error(l);
 				}
 			}
@@ -130,8 +130,8 @@ namespace LuaHooks {
 		}
 
 		std::string script = map[scriptName];
-		int status = luaL_loadbufferasfile(l, script.c_str(), script.size(), ("(" + mapPath + "):\\" + scriptName));
-		status != LUA_OK && developerMode ? lua_pop(l, 1), status = luaL_loadfilex(l, scriptName.c_str(), mode) : NULL;
+		int status = luaL_loadbufferasfile(l, script.data(), script.size(), ("(" + mapPath + "):\\" + scriptName));
+		status != LUA_OK && developerMode ? lua_pop(l, 1), status = luaL_loadfilex(l, scriptName.data(), mode) : NULL;
 
 		return load_aux(l, status, env);
 	}
@@ -361,7 +361,7 @@ namespace LuaHooks {
 			lua_pop(L, 1);
 		}
 
-		Warcraft::PrintChat(string.c_str(), 60.f);
+		Warcraft::PrintChat(string.data(), 60.f);
 
 		return 0;
 	}

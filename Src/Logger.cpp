@@ -18,7 +18,7 @@ namespace Logger {
 		SetConsoleOutputCP(65001);
 
 		if (!name.empty()) {
-			SetConsoleTitle(name.c_str());
+			SetConsoleTitle(name.data());
 		}
 
 		isConsole = true;
@@ -102,10 +102,10 @@ namespace Logger {
 			//info = "[|cFF" + color + message + "|r] " + info;
 			SYSTEMTIME time;
 			GetLocalTime(&time);
-			info = Utils::format("[%02d:%02d:%02d] [|cFF%s%s|r]: %s", time.wHour, time.wMinute, time.wSecond, color.c_str(), message.c_str(), info.c_str());
+			info = Utils::format("[%02d:%02d:%02d] [%s|cFF%s%s|r]: %s", time.wHour, time.wMinute, time.wSecond, isUjAPI ? "|cFF4287F5Lua|r " : "", color.data(), message.data(), info.data());
 		}
 
-		Utils::printf("%s\n", info.c_str());
+		Utils::printf("%s\n", info.data());
 
 		return info;
 	}

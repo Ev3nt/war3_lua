@@ -198,7 +198,7 @@ namespace LuaMachine {
 			GetGlobalTable(l, "_LUA_WARCRAFT_HANDLES", false, false);
 		}
 		else {
-			GetGlobalTable(l, std::string("_LUA_CONST_").append(tname).c_str(), false, false);
+			GetGlobalTable(l, std::string("_LUA_CONST_").append(tname).data(), false, false);
 			key = handle;
 		}
 		lua_rawgeti(l, -1, key);
@@ -237,15 +237,15 @@ namespace LuaMachine {
 
 	void lua_throwerr(lua_State* l) {
 		std::string error = lua_tostring(l, -1);
-		Warcraft::PrintChat((Logger::Log(error, Logger::LEVEL::LOG_ERROR) + error).c_str(), 100);
+		Warcraft::PrintChat((Logger::Log(error, Logger::LEVEL::LOG_ERROR) + error).data(), 100);
 	}
 
 	void lua_throwWarning(lua_State* l, std::string msg) {
-		luaL_traceback(l, l, msg.c_str(), 0);
+		luaL_traceback(l, l, msg.data(), 0);
 		std::string warning = lua_tostring(l, -1);
 		lua_pop(l, 1);
 
-		Warcraft::PrintChat((Logger::Log(warning, Logger::LEVEL::LOG_WARNING) + warning).c_str(), 100);
+		Warcraft::PrintChat((Logger::Log(warning, Logger::LEVEL::LOG_WARNING) + warning).data(), 100);
 	}
 
 	int stacktrace(lua_State* L) {

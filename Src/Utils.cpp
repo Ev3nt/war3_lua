@@ -18,15 +18,14 @@ namespace Utils {
 		va_start(args, format);
 		std::string buffer = formatv(format, args);
 		va_end(args);
-
+		
 		return buffer;
 	}
 
 	void printf(std::string format, ...) {
-		format += "|r";
 		va_list args;
 		va_start(args, format);
-		std::string buffer = formatv(format, args);
+		std::string buffer = formatv(format, args) + "|r";
 		va_end(args);
 
 		size_t i = 0;

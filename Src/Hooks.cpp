@@ -200,6 +200,7 @@ namespace Hooks {
 					{
 						if (_wParam == WP_LUA_DEVCONSOLE_MODE) {
 							developerMode = true;
+							isUjAPI = true;
 						}
 
 						if (!Logger::isConsole) {

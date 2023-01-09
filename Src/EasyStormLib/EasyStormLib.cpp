@@ -17,7 +17,7 @@ namespace Storm {
 	}
 
 	void Archive::Open(std::string name, DWORD priority, DWORD flags) {
-		if (StormOpenArchive(name.c_str(), priority, flags, &m_handle)) {
+		if (StormOpenArchive(name.data(), priority, flags, &m_handle)) {
 			m_owner = true;
 		}
 	}
@@ -53,7 +53,7 @@ namespace Storm {
 		FillMemory(name, sizeof(name), 0);
 
 		HANDLE _handle;
-		if (StormOpenFileEx(NULL, fileName.c_str(), SFILE_OPEN_FROM_MPQ, &_handle)) {
+		if (StormOpenFileEx(NULL, fileName.data(), SFILE_OPEN_FROM_MPQ, &_handle)) {
 			HANDLE _archive;
 			if (StormGetFileArchive(_handle, &_archive)) {
 				StormGetArchiveName(_archive, name, sizeof(name));
@@ -70,7 +70,7 @@ namespace Storm {
 
 		HANDLE _handle = NULL;
 
-		StormOpenFileEx(m_handle, name.c_str(), SFILE_OPEN_FROM_MPQ, &_handle);
+		StormOpenFileEx(m_handle, name.data(), SFILE_OPEN_FROM_MPQ, &_handle);
 
 		if (_handle) {
 			SIZE_T high; // Idk how i can use it on x32, so maximum size limit is 4gb

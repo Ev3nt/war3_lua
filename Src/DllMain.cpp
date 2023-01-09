@@ -7,6 +7,7 @@
 
 bool developerMode = false;
 bool disableWarnings = false;
+bool isUjAPI = false;
 
 bool StartUp();
 
