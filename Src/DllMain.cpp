@@ -16,6 +16,8 @@ bool StartUp();
 BOOL APIENTRY DllMain(HMODULE module, UINT reason, LPVOID reserved) {
 	switch (reason) {
 	case DLL_PROCESS_ATTACH:
+		DisableThreadLibraryCalls(module);
+
 		if (!gameBase) {
 			return FALSE;
 		}

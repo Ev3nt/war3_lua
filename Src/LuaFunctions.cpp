@@ -431,45 +431,6 @@ namespace LuaFunctions {
 		return 1;
 	}
 
-	int IdToString(lua_State* l) {
-		if (lua_isinteger(l, 1)) {
-			DWORD id = (DWORD)lua_tointeger(l, 1);
-			std::reverse(&(((LPSTR)&id)[0]), &(((LPSTR)&id)[4]));
-			lua_pushlstring(l, (LPSTR)&id, 4);
-		}
-		else {
-			return luaL_typeerror(l, 1, "integer");
-		}
-
-
-		return 1;
-	}
-
-	int StringToId(lua_State* l) {
-		if (lua_isstring(l, 1)) {
-			lua_pushinteger(l, Jass::ToID(lua_tostring(l, 1)));
-		}
-		else {
-			return luaL_typeerror(l, 1, "string");
-		}
-
-		return 1;
-	}
-
-	int FourCC(lua_State* l) {
-		if (lua_isinteger(l, 1)) {
-			IdToString(l);
-		}
-		else if (lua_isstring(l, 1)) {
-			StringToId(l);
-		}
-		else {
-			return luaL_typeerror(l, 1, "string or integer");
-		}
-
-		return 1;
-	}
-
 	int lua_jassoplistgc(lua_State* l) {
 		lua_getfield(l, 1, "oplist");
 		delete (JassMachine::JASS_OPLIST*)lua_touserdata(l, -1);
@@ -527,11 +488,7 @@ namespace LuaFunctions {
 
 		for (auto& native : Jass::jassnatives) {
 			lua_registerJassNative(l, native.first.data(), &native.second, lua_invokeNative);
-		}
-
-		lua_register(l, "IdToString", IdToString);
-		lua_register(l, "StringToId", StringToId);
-		lua_register(l, "FourCC", FourCC);		
+		}	
 	}
 
 	int lua_getJassArrayElement(lua_State* l) {
@@ -720,6 +677,45 @@ namespace LuaFunctions {
 
 	//--------------------------------------------------------
 
+	int lua_IdToString(lua_State* l) {
+		if (lua_isinteger(l, 1)) {
+			DWORD id = (DWORD)lua_tointeger(l, 1);
+			std::reverse(&(((LPSTR)&id)[0]), &(((LPSTR)&id)[4]));
+			lua_pushlstring(l, (LPSTR)&id, 4);
+		}
+		else {
+			return luaL_typeerror(l, 1, "integer");
+		}
+
+
+		return 1;
+	}
+
+	int lua_StringToId(lua_State* l) {
+		if (lua_isstring(l, 1)) {
+			lua_pushinteger(l, Jass::ToID(lua_tostring(l, 1)));
+		}
+		else {
+			return luaL_typeerror(l, 1, "string");
+		}
+
+		return 1;
+	}
+
+	int lua_FourCC(lua_State* l) {
+		if (lua_isinteger(l, 1)) {
+			lua_IdToString(l);
+		}
+		else if (lua_isstring(l, 1)) {
+			lua_StringToId(l);
+		}
+		else {
+			return luaL_typeerror(l, 1, "string or integer");
+		}
+
+		return 1;
+	}
+
 	int lua_GetMapFileName(lua_State* l) {
 		if (lua_isboolean(l, 1)) {
 			Storm::Archive map;
@@ -740,7 +736,26 @@ namespace LuaFunctions {
 		return 1;
 	}
 
+	int lua_IsDevMode(lua_State* l) {
+		lua_pushboolean(l, developerMode);
+
+		return 1;
+	}
+
+	int lua_IsUjAPI(lua_State* l) {
+		lua_pushboolean(l, isUjAPI);
+
+		return 1;
+	}
+
 	void lua_openExternalFunctions(lua_State* l) {
+		lua_register(l, "IdToString", lua_IdToString);
+		lua_register(l, "StringToId", lua_StringToId);
+		lua_register(l, "FourCC", lua_FourCC);
+
 		lua_register(l, "GetMapFileName", lua_GetMapFileName);
+
+		lua_register(l, "IsDevMode", lua_IsDevMode);
+		lua_register(l, "IsUjAPI", lua_IsUjAPI);
 	}
 }
